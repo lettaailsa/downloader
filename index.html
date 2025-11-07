@@ -100,7 +100,7 @@
       document.getElementById('card-'+tab).classList.add('active');
       buttons[tab].classList.add('active');
     }
-    selectTab('ig'); // default Instagram
+    selectTab('tt'); // default Instagram
 
     // ---------------------
     // CONFIG: jika kamu punya proxy (express/server) yang jalan,
@@ -145,17 +145,18 @@
       // Determine extension; prefer contentType if provided
       const ext = inferExtension(url, contentType);
 
-      // decide suffix: only '-hd' or '-sd' if resolution provided and type != 'mp3'
+      // decide suffix: HD/SD -> uppercase, other resolutions keep as-is, mp3 no suffix
       let suffix = '';
-      if (type && type.toLowerCase() === 'mp3') {
+      if (type?.toLowerCase() === 'mp3') {
         suffix = ''; // mp3 no suffix
-      } else {
-        if (resolution && resolution.trim() !== '') {
-          const r = resolution.trim().toUpperCase(); // <-- ini kuncinya
-          suffix = `-${r}`; // hasilnya jadi -HD atau -SD
+      } else if (resolution && resolution.trim() !== '') {
+        const r = resolution.trim().toLowerCase();
+        // if it's hd or sd, make uppercase; otherwise keep the original (lowercase)
+        if (r === 'hd' || r === 'sd') {
+          suffix = `-${r.toUpperCase()}`; // -HD or -SD
+        } else {
+          suffix = `-${r}`; // e.g. -4k or -720p
         }
-      }
-
       }
 
       return `Tikdownload.live_${rnd}${suffix}.${ext}`;
@@ -344,6 +345,7 @@
   </script>
 </body>
 </html>
+
 
 
 
