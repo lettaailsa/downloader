@@ -375,7 +375,7 @@
           const suggestedName = buildFilename(guessedType, guessedRes, item.url, item.contentType || '');
 
           // buat tombol sesuai jenis
-          const btnLabel = finalIsImage ? 'Download Image' : 'Download Video';
+          const btnLabel = finalIsImage ? 'Download Video';
           const btn = makeDownloadButton(item.url, btnLabel, suggestedName);
           container.appendChild(btn);
 
@@ -490,3 +490,4 @@
   </script>
 </body>
 </html>
+
