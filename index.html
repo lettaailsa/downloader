@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Tikdownload</title>
+  <title>TikDownload</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/jpeg" href="https://kiracloud.my.id/KC9K.jpeg" />
   <style>
@@ -54,7 +54,7 @@
 </head>
 <body>
 
-  <h1>Tikdownload</h1>
+  <h1>TikDownload</h1>
 
   <div class="selector">
     <button id="btnTT" onclick="selectTab('tt')">TikTok</button>
@@ -85,7 +85,7 @@
     </div>
   </div>
 
-  <footer>© 2025 Tikdownload</footer>
+  <footer>© 2025 TikDownload</footer>
 
   <script>
     const buttons = {
@@ -160,7 +160,7 @@
         }
       }
 
-      return `Tikdownload.live_${rnd}${suffix}.${ext}`;
+      return `TikDownload.live_${rnd}${suffix}.${ext}`;
     }
 
     // Download via proxy (creates a link to your proxy endpoint)
@@ -192,7 +192,7 @@
         const contentType = res.headers.get('Content-Type') || '';
         const blob = await res.blob();
         const ext = inferExtension(fileUrl, contentType);
-        const filename = suggestedFilename || `Tikdownload.live_${rand6()}.${ext}`;
+        const filename = suggestedFilename || `TikDownload.live_${rand6()}.${ext}`;
 
         const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -346,6 +346,7 @@
   </script>
 </body>
 </html>
+
 
 
 
