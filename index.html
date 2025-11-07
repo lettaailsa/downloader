@@ -369,8 +369,6 @@
           if (downloadAllBtn) {
             downloadAllBtn.style.display = 'inline-block';
             downloadAllBtn.onclick = () => batchDownload(batchForDownload);
-          } else {
-            console.warn('Batch download ready but "Download All" button not present in DOM.');
           }
         } else {
           if (downloadAllBtn) downloadAllBtn.style.display = 'none';
@@ -467,6 +465,7 @@
   </script>
 </body>
 </html>
+
 
 
 
