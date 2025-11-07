@@ -117,19 +117,10 @@
     }
     selectTab('tt'); // default Instagram
 
-    // ---------------------
-    // CONFIG: jika kamu punya proxy (express/server) yang jalan,
-    // set proxyBase ke 'http://localhost:3000/proxy' atau domain kamu.
-    // Kalau dikosongin '' maka script akan coba fetch->blob dan fallback ke open-in-new-tab.
-    // (Proxy recommended jika remote server menolak CORS)
-    const proxyBase = '/proxy'; // contoh: 'http://localhost:3000/proxy' atau '' to disable
+    const proxyBase = '/proxy';
 
-    // Utility: generate 6-digit random number
-    function rand6() {
-      return Math.floor(100000 + Math.random() * 900000);
-    }
+    function rand6() { return Math.floor(100000 + Math.random() * 900000); }
 
-    // Utility: try to infer extension from URL or content-type
     function inferExtension(url, contentType) {
       try {
         const u = new URL(url);
@@ -149,45 +140,27 @@
       return 'bin';
     }
 
-    // Build filename: Cecilefy.xyz_6digits + suffix + .ext
-    // Rules:
-    // - HD -> add "-hd"
-    // - SD -> add "-sd"
-    // - MP3 -> no suffix (just Cecilefy.xyz_6digits.mp3)
-    // Note: function kept signature compatible: (type, resolution, url, contentType)
     function buildFilename(type, resolution, url, contentType) {
       const rnd = rand6();
-      // Determine extension; prefer contentType if provided
       const ext = inferExtension(url, contentType);
-
-      // decide suffix: HD/SD -> uppercase, other resolutions keep as-is, mp3 no suffix
       let suffix = '';
       if (type?.toLowerCase() === 'mp3') {
-        suffix = ''; // mp3 no suffix
+        suffix = '';
       } else if (resolution && resolution.trim() !== '') {
         const r = resolution.trim().toLowerCase();
-        // if it's hd or sd, make uppercase; otherwise keep the original (lowercase)
-        if (r === 'hd' || r === 'sd') {
-          suffix = `-${r.toUpperCase()}`; // -HD or -SD
-        } else {
-          suffix = `-${r}`; // e.g. -4k or -720p
-        }
+        if (r === 'hd' || r === 'sd') suffix = `-${r.toUpperCase()}`;
+        else suffix = `-${r}`;
       }
-
       return `TikDownload.live_${rnd}${suffix}.${ext}`;
     }
 
-    // Download via proxy (creates a link to your proxy endpoint)
     function downloadViaProxy(fileUrl, suggestedFilename) {
-      if (!proxyBase) {
-        return false;
-      }
+      if (!proxyBase) return false;
       try {
         const params = new URLSearchParams({ url: fileUrl, filename: suggestedFilename });
         const proxyUrl = `${proxyBase}?${params.toString()}`;
         const a = document.createElement('a');
         a.href = proxyUrl;
-        // let server control disposition; but clicking will start download from proxy
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -198,7 +171,6 @@
       }
     }
 
-    // Force-download using fetch -> blob. Requires CORS allowed by remote.
     async function fetchAndSave(fileUrl, suggestedFilename) {
       try {
         const res = await fetch(fileUrl);
@@ -207,7 +179,6 @@
         const blob = await res.blob();
         const ext = inferExtension(fileUrl, contentType);
         const filename = suggestedFilename || `TikDownload.live_${rand6()}.${ext}`;
-
         const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = blobUrl;
@@ -223,7 +194,6 @@
       }
     }
 
-    // Final fallback: open direct URL in new tab (user can save manually)
     function fallbackOpen(fileUrl) {
       try {
         window.open(fileUrl, '_blank');
@@ -233,32 +203,24 @@
       }
     }
 
-    // Unified download handler: tries proxy -> fetch -> fallback open
     async function handleDownload(fileUrl, suggestedFilename) {
-      // 1) try proxy if configured
+      if (!fileUrl) return alert('URL tidak tersedia untuk didownload.');
       if (proxyBase) {
         const ok = downloadViaProxy(fileUrl, suggestedFilename);
         if (ok) return;
       }
-
-      // 2) try fetch -> blob (may fail due to CORS)
       const okFetch = await fetchAndSave(fileUrl, suggestedFilename);
       if (okFetch) return;
-
-      // 3) fallback open
       fallbackOpen(fileUrl);
     }
 
-    // ---------- tambahan util untuk multiple images ----------
     function isImageUrl(url) {
       if (!url) return false;
       try {
-        // check extension first
         const path = (new URL(url)).pathname;
         const m = path.match(/\.([a-z0-9]{2,5})$/i);
         if (m && ['jpg','jpeg','png','webp','gif','bmp','heic','heif'].includes(m[1].toLowerCase())) return true;
       } catch(e){}
-      // fallback: data:image or common image strings
       return /(^data:image\/)|image\//i.test(url);
     }
 
@@ -278,12 +240,11 @@
         const it = items[i];
         try {
           const suggested = buildFilename(it.type || 'ig', it.resolution || '', it.url, it.contentType || '');
-          // coba fetchAndSave dulu (may fail CORS), kalau gagal fallback ke handleDownload
           const ok = await fetchAndSave(it.url, suggested);
           if (!ok) {
             await handleDownload(it.url, suggested);
           }
-          await new Promise(r => setTimeout(r, 400)); // jeda kecil
+          await new Promise(r => setTimeout(r, 400));
         } catch (e) {
           console.error('batchDownload item error', e);
         }
@@ -291,20 +252,16 @@
       alert('Proses batch download selesai.');
     }
 
-    // --- Instagram downloader (MODIFIED) ---
+    // --- Instagram downloader (MODIFIED: thumbnail-only, no "Video" text, no Download All) ---
     async function dlIG() {
       const url = document.getElementById('ig-url').value.trim();
       const load = document.getElementById('ig-load');
       const resEl = document.getElementById('ig-res');
-      const maxInput = document.getElementById('ig-max');
-      const downloadAllBtn = document.getElementById('ig-download-all');
 
       if (!url) return alert('Masukkan link Instagram!');
       resEl.innerHTML = '';
       load.style.display = 'block';
-      if (downloadAllBtn) downloadAllBtn.style.display = 'none';
 
-      // helpers to guess types
       function looksLikeImage(u) { return /\.(jpe?g|png|webp|gif|bmp|heic|heif)(?:$|\?)/i.test(u || ''); }
       function looksLikeVideo(u) { return /\.(mp4|webm|mov|m4v|m3u8)(?:$|\?)/i.test(u || ''); }
 
@@ -314,10 +271,10 @@
         const json = await res.json();
         if (!json.status || !json.result) throw new Error('Tidak ada media ditemukan');
 
-        // normalize to array
+        // normalize result to an array
         let raw = Array.isArray(json.result) ? json.result : [json.result];
 
-        // flatten potential nested arrays
+        // flatten nested arrays if any
         const entries = [];
         raw.forEach(e => {
           if (Array.isArray(e.media)) e.media.forEach(m => entries.push(m));
@@ -325,12 +282,10 @@
           else entries.push(e);
         });
 
-        // prepare display
         resEl.innerHTML = '';
-        const batchForDownload = [];
 
         entries.forEach(entry => {
-          // try various fields that might contain file URL
+          // try various likely fields for file URL
           const candidateFields = [
             entry.url_download, entry.url, entry.file, entry.src, entry.video,
             entry.video_url, entry.mp4, entry.mp4_url, entry.media_url, entry.display_url, entry.hd_url
@@ -341,7 +296,6 @@
           const contentType = (entry.contentType || entry.type || entry.mime || '').toString();
           const title = entry.title || entry.caption || '';
 
-          // detect video using multiple signals
           const explicitVideoFlag = (typeof entry.is_video !== 'undefined') ? !!entry.is_video : null;
           const mediaTypeFlag = (entry.media_type || entry.mediaType || '').toString().toLowerCase();
 
@@ -354,62 +308,36 @@
             (thumb && candidate && !looksLikeImage(candidate) && !looksLikeImage(thumb))
           );
 
-          // container (keep same UI)
+          // container
           const container = document.createElement('div');
           container.style.marginBottom = '15px';
           container.style.textAlign = 'left';
 
-          // preview: video element if video, else image
-          if (isVideo) {
-            if (candidate) {
-              const vid = document.createElement('video');
-              vid.controls = true;
-              vid.preload = 'none';
-              vid.style.width = '100%';
-              vid.style.borderRadius = '10px';
-              vid.style.marginBottom = '6px';
-              if (thumb) vid.poster = thumb;
-              const src = document.createElement('source');
-              src.src = candidate;
-              if (contentType) src.type = contentType;
-              vid.appendChild(src);
-              container.appendChild(vid);
-            } else if (thumb) {
-              const img = document.createElement('img');
-              img.src = thumb;
-              img.style.width = '100%';
-              img.style.borderRadius = '10px';
-              img.style.marginBottom = '6px';
-              container.appendChild(img);
-            }
-          } else {
-            // image preview prefer candidate else thumb
-            const img = document.createElement('img');
-            img.src = candidate || thumb || '';
-            img.style.width = '100%';
-            img.style.borderRadius = '10px';
-            img.style.marginBottom = '6px';
-            container.appendChild(img);
+          // **thumbnail-only preview** (always show image thumbnail if available; no <video>)
+          const previewImg = document.createElement('img');
+          previewImg.src = thumb || candidate || '';
+          previewImg.style.width = '100%';
+          previewImg.style.borderRadius = '10px';
+          previewImg.style.marginBottom = '6px';
+          container.appendChild(previewImg);
+
+          // minimal label: only show title if exists (no "Video" word)
+          if (title) {
+            const lbl = document.createElement('div');
+            lbl.style.color = '#ddd';
+            lbl.style.fontSize = '0.9rem';
+            lbl.style.marginBottom = '6px';
+            lbl.textContent = title;
+            container.appendChild(lbl);
           }
 
-          // minimal label
-          const lbl = document.createElement('div');
-          lbl.style.color = '#ddd';
-          lbl.style.fontSize = '0.9rem';
-          lbl.style.marginBottom = '6px';
-          lbl.textContent = title || (isVideo ? 'Video' : 'Image');
-          container.appendChild(lbl);
-
-          // suggested filename
+          // suggested filename and button (button text depends on isVideo)
           const suggestedName = buildFilename(isVideo ? 'video' : 'image', isVideo ? 'hd' : '', candidate || thumb, contentType);
-
-          // button label depends on type
           const btn = document.createElement('button');
           btn.className = 'dlbtn';
           btn.textContent = isVideo ? 'Download Video' : 'Download Image';
           btn.onclick = () => {
             if (!candidate) {
-              // fallback: open original post if no direct file URL
               const openUrl = entry.page_url || entry.post_url || entry.permalink || url;
               window.open(openUrl, '_blank');
               return;
@@ -418,41 +346,10 @@
           };
           container.appendChild(btn);
 
-          // append to results
           resEl.appendChild(container);
-
-          // add to batch if candidate exists
-          if (candidate) {
-            batchForDownload.push({
-              url: candidate,
-              contentType,
-              type: isVideo ? 'video' : 'image',
-              resolution: isVideo ? 'hd' : '',
-              name: suggestedName
-            });
-          }
         });
 
-        // keep support for downloadAllBtn if present, else create Download All in results
-        if (batchForDownload.length > 0) {
-          if (downloadAllBtn) {
-            downloadAllBtn.style.display = 'inline-block';
-            downloadAllBtn.onclick = () => batchDownload(batchForDownload);
-          } else {
-            const allBtn = document.createElement('button');
-            allBtn.className = 'dlbtn';
-            allBtn.style.marginTop = '8px';
-            allBtn.textContent = 'Download All';
-            allBtn.onclick = async () => {
-              for (const f of batchForDownload) {
-                await handleDownload(f.url, f.name);
-                await new Promise(r => setTimeout(r, 350));
-              }
-            };
-            resEl.appendChild(allBtn);
-          }
-        }
-
+        // DO NOT add Download All button (user requested none)
         resEl.style.display = 'block';
       } catch (e) {
         console.error(e);
@@ -462,7 +359,7 @@
       }
     }
 
-    // --- TikTok downloader ---
+    // --- TikTok downloader (unchanged) ---
     async function dlTT() {
       const url = document.getElementById('tt-url').value.trim();
       const load = document.getElementById('tt-load');
@@ -513,12 +410,11 @@
           elMP3.onclick = null;
         }
 
-        // If API returns images array for slideshow, render similarly to IG
+        // If API returns images array for slideshow, render similarly to IG (thumbnails + single download buttons)
         if (Array.isArray(json.result.images) && json.result.images.length) {
-          // clear default video UI area
           result.innerHTML = '';
-          const max = 100; // could be controlled via an input if desired
-          json.result.images.slice(0, max).forEach((imgUrl, idx) => {
+          const max = 100;
+          json.result.images.slice(0, max).forEach(imgUrl => {
             const div = document.createElement('div');
             div.style.marginBottom = '12px';
             const im = document.createElement('img');
