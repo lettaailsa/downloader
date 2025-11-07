@@ -356,7 +356,7 @@
           const guessedType = isImageUrl(item.url) ? 'image' : 'ig';
           const guessedRes = item.resolution || ((isImageUrl(item.url) && /hd/i.test(item.url)) ? 'hd' : '');
           const suggestedName = buildFilename(guessedType, guessedRes, item.url, item.contentType || '');
-          const btn = makeDownloadButton(item.url, `Download`, suggestedName);
+          const btn = makeDownloadButton(item.url, `Download Image`, suggestedName);
           container.appendChild(btn);
 
           batchForDownload.push({
@@ -450,7 +450,7 @@
             im.style.borderRadius = '10px';
             div.appendChild(im);
             const suggested = buildFilename('tt', '', imgUrl);
-            const btn = makeDownloadButton(imgUrl, `Download`, suggested);
+            const btn = makeDownloadButton(imgUrl, `Download Image`, suggested);
             div.appendChild(btn);
             result.appendChild(div);
           });
@@ -467,4 +467,5 @@
   </script>
 </body>
 </html>
+
 
