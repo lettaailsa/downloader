@@ -13,6 +13,7 @@
       --accent2: #fff;
       --radius: 12px;
       --green: #28a745;
+      --container-max: 720px; /* <= ubah ini kalau mau lebih sempit/lebar */
     }
     * { box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Roboto,Arial,sans-serif }
     body {
@@ -29,27 +30,29 @@
       font-size:2rem;
       font-weight:700;
       letter-spacing:1px;
-      margin-bottom:25px;
+      margin-bottom:18px;
       color:var(--accent2);
       text-transform:uppercase;
       text-align:center;
     }
-    .selector { display:flex; gap:10px; justify-content:center; margin-bottom:25px; flex-wrap:wrap; }
-    .selector button { padding:12px 20px; border:none; border-radius:var(--radius); background:linear-gradient(135deg,#222,#111); color:#fff; font-size:1rem; cursor:pointer; transition:.3s; }
-    .selector button:hover { background:linear-gradient(135deg,#444,#222); transform:translateY(-2px); }
-    .selector button.active { background:linear-gradient(135deg,#555,#333); box-shadow:0 0 10px rgba(255,255,255,0.2) }
-    .card { background:var(--card); border-radius:var(--radius); padding:25px; width:100%; max-width:900px; text-align:center; box-shadow:0 0 25px rgba(255,255,255,0.08); display:none; animation:fadeIn 0.5s ease; }
+    .selector { display:flex; gap:10px; justify-content:center; margin-bottom:18px; flex-wrap:wrap; }
+    .selector button { padding:10px 18px; border:none; border-radius:999px; background:linear-gradient(135deg,#222,#111); color:#fff; font-size:0.95rem; cursor:pointer; transition:.18s; box-shadow:0 6px 30px rgba(0,0,0,0.6) }
+    .selector button:hover { transform:translateY(-2px); }
+    .selector button.active { background:linear-gradient(135deg,#555,#333); box-shadow:0 10px 40px rgba(0,0,0,0.6) }
+    .card { background:var(--card); border-radius:var(--radius); padding:22px; width:100%; max-width:1100px; text-align:center; box-shadow:0 0 40px rgba(0,0,0,0.6); display:none; animation:fadeIn 0.5s ease; }
     .card.active { display:block }
-    input[type=url] { width:100%; padding:12px 15px; border:none; border-radius:var(--radius); font-size:1rem; margin-bottom:15px; background:#111; color:#fff; outline:1px solid #333; transition:.3s; }
-    input[type=url]:focus { outline:1px solid var(--accent); }
-    button.download { width:100%; padding:12px; background:linear-gradient(135deg,#333,#111); color:#fff; border:none; border-radius:var(--radius); font-size:1rem; cursor:pointer; transition:0.3s; }
-    button.download:hover { background:linear-gradient(135deg,#555,#222); transform:translateY(-2px); }
-    .loading { margin:15px 0; font-size:0.95rem; color:#aaa; display:none; }
-    .result { display:none; margin-top:20px; background:#111; border-radius:var(--radius); padding:15px; box-shadow:inset 0 0 10px rgba(255,255,255,0.05); animation:fadeIn 0.5s ease; text-align:left; }
-    .result img { width:100%; border-radius:var(--radius); margin-bottom:10px; display:block; }
-    .dlbtn { display:block; margin:8px 0; padding:10px; background:#222; border-radius:var(--radius); text-align:center; color:#fff; cursor:pointer; text-decoration:none; border:none; width:100%; }
+    /* form-wrap membatasi lebar field agar gak kebablasan di layar besar */
+    .form-wrap { width:100%; max-width:var(--container-max); margin:0 auto 8px auto; text-align:center; }
+    input[type=url] { width:100%; padding:12px 15px; border:none; border-radius:10px; font-size:1rem; margin-bottom:12px; background:#111; color:#fff; outline:1px solid #333; transition:.18s; }
+    input[type=url]:focus { outline:1px solid var(--accent); box-shadow:0 0 0 3px rgba(136,136,136,0.05); }
+    button.download { width:100%; padding:12px; background:linear-gradient(135deg,#333,#111); color:#fff; border:none; border-radius:10px; font-size:1rem; cursor:pointer; transition:0.18s; }
+    button.download:hover { transform:translateY(-2px); background:linear-gradient(135deg,#444,#222); }
+    .loading { margin:12px 0; font-size:0.95rem; color:#aaa; display:none; }
+    .result { display:none; margin-top:20px; background:#111; border-radius:var(--radius); padding:15px; box-shadow:inset 0 0 10px rgba(255,255,255,0.02); animation:fadeIn 0.5s ease; text-align:left; }
+    .result img { width:100%; border-radius:8px; margin-bottom:10px; display:block; }
+    .dlbtn { display:block; margin:8px 0; padding:10px; background:#222; border-radius:8px; text-align:center; color:#fff; cursor:pointer; text-decoration:none; border:none; width:100%; }
     .dlbtn:hover { background:#333; }
-    footer { margin-top:30px; font-size:0.8rem; color:#777; text-align:center; }
+    footer { margin-top:24px; font-size:0.8rem; color:#777; text-align:center; }
 
     /* grid untuk banyak gambar/video */
     .media-grid {
@@ -62,16 +65,13 @@
       background:#0f0f0f;
       border-radius:10px;
       overflow:hidden;
-      box-shadow:0 2px 6px rgba(0,0,0,0.4);
-      padding-bottom:12px;
-      padding-top:8px;
-      padding-left:8px;
-      padding-right:8px;
+      box-shadow:0 4px 18px rgba(0,0,0,0.5);
+      padding:10px;
     }
     .media-item img,
     .media-item video {
       width:100%;
-      height:200px;
+      height:180px;
       object-fit:cover;
       border-radius:8px;
       display:block;
@@ -90,7 +90,7 @@
       border-radius:8px;
       padding:10px 0;
       cursor:pointer;
-      transition:0.2s;
+      transition:0.18s;
       margin-bottom:8px;
     }
     .media-item button.primary:hover { background:#1e8d38; }
@@ -106,12 +106,18 @@
     }
     .media-item a.open-src:hover { background:#333; }
 
-    @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    @media (max-width:480px) {
+      :root { --container-max: 100%; }
+      .media-item img, .media-item video { height:150px; }
+      h1 { font-size:1.6rem; }
+    }
+
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
   </style>
 </head>
 <body>
 
-  <h1>TikDownload</h1>
+  <h1>TIKDOWNLOAD</h1>
 
   <div class="selector">
     <button id="btnTT" onclick="selectTab('tt')">TikTok</button>
@@ -121,8 +127,13 @@
   <!-- Instagram -->
   <div class="card" id="card-ig">
     <p style="color:#777;margin-bottom:10px;">Unduh foto & video dari Instagram</p>
-    <input id="ig-url" type="url" placeholder="https://www.instagram.com/p/xxxxx">
-    <button class="download" onclick="dlIG()">Download</button>
+
+    <!-- semua input/button dibungkus supaya gak melebar -->
+    <div class="form-wrap">
+      <input id="ig-url" type="url" placeholder="https://www.instagram.com/p/xxxxx">
+      <button class="download" onclick="dlIG()">Download</button>
+    </div>
+
     <div class="loading" id="ig-load">⏳ Mengambil data...</div>
     <div class="result" id="ig-res"></div>
   </div>
@@ -130,11 +141,15 @@
   <!-- TikTok -->
   <div class="card" id="card-tt">
     <p style="color:#777;margin-bottom:10px;">Unduh video TikTok tanpa watermark</p>
-    <input id="tt-url" type="url" placeholder="https://vt.tiktok.com/xxxxx">
-    <button class="download" onclick="dlTT()">Download</button>
+
+    <div class="form-wrap">
+      <input id="tt-url" type="url" placeholder="https://vt.tiktok.com/xxxxx">
+      <button class="download" onclick="dlTT()">Download</button>
+    </div>
+
     <div class="loading" id="tt-load">⏳ Mengambil data...</div>
     <div class="result" id="tt-res">
-      <img id="tt-thumb" alt="Thumbnail" style="width:100%; border-radius:10px; display:block">
+      <img id="tt-thumb" alt="Thumbnail" style="width:100%; border-radius:8px; display:block">
       <h4 id="tt-title" style="margin:10px 0 6px 0;"></h4>
       <button class="dlbtn" id="tt-hd" style="display:none">Download HD</button>
       <button class="dlbtn" id="tt-sd" style="display:none">Download SD</button>
@@ -161,18 +176,9 @@
     // default ke Instagram
     selectTab('ig');
 
-    // ---------------------
-    // CONFIG: jika kamu punya proxy (express/server) yang jalan,
-    // set proxyBase ke 'http://localhost:3000/proxy' atau domain kamu.
-    // Kalau dikosongin '' maka script akan coba fetch->blob dan fallback ke open-in-new-tab.
-    const proxyBase = '/proxy'; // contoh: 'http://localhost:3000/proxy' atau '' to disable
+    const proxyBase = '/proxy';
+    function rand6() { return Math.floor(100000 + Math.random() * 900000); }
 
-    // Utility: generate 6-digit random number
-    function rand6() {
-      return Math.floor(100000 + Math.random() * 900000);
-    }
-
-    // Utility: try to infer extension from URL or content-type
     function inferExtension(url, contentType) {
       try {
         const u = new URL(url);
@@ -192,7 +198,6 @@
       return 'bin';
     }
 
-    // Build filename: TikDownload.live_6digits + suffix + .ext
     function buildFilename(type, resolution, url, contentType) {
       const rnd = rand6();
       const ext = inferExtension(url, contentType);
@@ -201,16 +206,12 @@
         suffix = '';
       } else if (resolution && resolution.trim() !== '') {
         const r = resolution.trim().toLowerCase();
-        if (r === 'hd' || r === 'sd') {
-          suffix = `-${r.toUpperCase()}`;
-        } else {
-          suffix = `-${r}`;
-        }
+        if (r === 'hd' || r === 'sd') suffix = `-${r.toUpperCase()}`;
+        else suffix = `-${r}`;
       }
       return `TikDownload.live_${rnd}${suffix}.${ext}`;
     }
 
-    // Download via proxy (creates a link to your proxy endpoint)
     function downloadViaProxy(fileUrl, suggestedFilename) {
       if (!proxyBase) return false;
       try {
@@ -228,7 +229,6 @@
       }
     }
 
-    // Force-download using fetch -> blob. Requires CORS allowed by remote.
     async function fetchAndSave(fileUrl, suggestedFilename) {
       try {
         const res = await fetch(fileUrl);
@@ -237,7 +237,6 @@
         const blob = await res.blob();
         const ext = inferExtension(fileUrl, contentType);
         const filename = suggestedFilename || `TikDownload.live_${rand6()}.${ext}`;
-
         const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = blobUrl;
@@ -253,7 +252,6 @@
       }
     }
 
-    // Final fallback: open direct URL in new tab (user can save manually)
     function fallbackOpen(fileUrl) {
       try {
         window.open(fileUrl, '_blank');
@@ -263,24 +261,17 @@
       }
     }
 
-    // Unified download handler: tries proxy -> fetch -> fallback open
     async function handleDownload(fileUrl, suggestedFilename) {
       if (!fileUrl) return alert('URL tidak tersedia untuk didownload.');
-      // 1) try proxy if configured
       if (proxyBase) {
         const ok = downloadViaProxy(fileUrl, suggestedFilename);
         if (ok) return;
       }
-
-      // 2) try fetch -> blob (may fail due to CORS)
       const okFetch = await fetchAndSave(fileUrl, suggestedFilename);
       if (okFetch) return;
-
-      // 3) fallback open
       fallbackOpen(fileUrl);
     }
 
-    // ---------- tambahan util untuk multiple images ----------
     function isImageUrl(url) {
       if (!url) return false;
       try {
@@ -289,15 +280,6 @@
         if (m && ['jpg','jpeg','png','webp','gif','bmp','heic','heif'].includes(m[1].toLowerCase())) return true;
       } catch(e){}
       return /(^data:image\/)|image\//i.test(url);
-    }
-
-    // create download button element
-    function makeDownloadButton(url, label, suggestedName) {
-      const btn = document.createElement('button');
-      btn.className = 'dlbtn';
-      btn.textContent = label || 'Download';
-      btn.addEventListener('click', () => handleDownload(url, suggestedName));
-      return btn;
     }
 
     async function batchDownload(items) {
@@ -320,7 +302,7 @@
       alert('Proses batch download selesai.');
     }
 
-    // --- Instagram downloader (modifikasi lengkap) ---
+    // --- Instagram downloader (modifikasi) ---
     async function dlIG() {
       const url = document.getElementById('ig-url').value.trim();
       const load = document.getElementById('ig-load');
@@ -329,7 +311,6 @@
       resEl.innerHTML = '';
       load.style.display = 'block';
 
-      // helper lokal: apakah url itu image/video berdasarkan ekstensi
       function looksLikeImage(u) { return /\.(jpe?g|png|webp|gif|bmp|heic|heif)(?:$|\?)/i.test(u || ''); }
       function looksLikeVideo(u) { return /\.(mp4|webm|mov|m4v)(?:$|\?)/i.test(u || ''); }
 
@@ -339,14 +320,11 @@
         const json = await res.json();
         if (!json.status) throw new Error('Gagal mengambil data');
 
-        // normalisasi hasil API jadi array items
         let raw = [];
         if (Array.isArray(json.result)) raw = json.result;
         else if (json.result) raw = [json.result];
-
         if (!raw.length) throw new Error('Tidak ada media ditemukan');
 
-        // normalize flatten items array (support entry.media, entry.files, or simple objects)
         const items = [];
         raw.forEach(entry => {
           if (Array.isArray(entry.media)) {
@@ -371,13 +349,11 @@
         const validItems = items.filter(it => it.url || it.thumbnail);
         if (!validItems.length) throw new Error('Tidak ada media valid untuk ditampilkan');
 
-        // buat grid
         const grid = document.createElement('div');
         grid.className = 'media-grid';
         const batch = [];
 
         validItems.forEach(it => {
-          // tentukan file URL prefer: url (file) else thumbnail
           const fileUrl = it.url || it.thumbnail;
           const thumb = it.thumbnail || null;
           const ct = (it.contentType || '').toString();
@@ -391,7 +367,7 @@
             vid.controls = true;
             vid.preload = 'none';
             vid.style.width = '100%';
-            vid.style.height = '200px';
+            vid.style.height = '180px';
             vid.style.objectFit = 'cover';
             if (thumb) vid.poster = thumb;
             const src = document.createElement('source');
@@ -406,11 +382,9 @@
             box.appendChild(img);
           }
 
-          // controls container
           const ctr = document.createElement('div');
           ctr.className = 'controls';
 
-          // primary download button
           const primaryBtn = document.createElement('button');
           primaryBtn.className = 'primary';
           primaryBtn.textContent = isVideo ? 'Download Video' : 'Download Image';
@@ -418,11 +392,9 @@
           primaryBtn.onclick = () => handleDownload(fileUrl, suggested);
           ctr.appendChild(primaryBtn);
 
-          // open source link (fallback / open original post)
           const openSrc = document.createElement('a');
           openSrc.className = 'open-src';
           openSrc.textContent = 'Open Source';
-          // prefer original post url if API returns it, else fallback to input URL
           openSrc.href = it.rawEntry?.page_url || it.rawEntry?.post_url || it.rawEntry?.permalink || url;
           openSrc.target = '_blank';
           ctr.appendChild(openSrc);
@@ -435,6 +407,21 @@
 
         resEl.appendChild(grid);
 
+        if (batch.length > 0) {
+          const allBtn = document.createElement('button');
+          allBtn.className = 'dlbtn';
+          allBtn.style.marginTop = '15px';
+          allBtn.textContent = 'Download All';
+          allBtn.onclick = async () => {
+            for (const f of batch) {
+              await handleDownload(f.url, f.name);
+              await new Promise(r => setTimeout(r, 350));
+            }
+            alert('Selesai mendownload semua file (cek tab/unduhan browser).');
+          };
+          resEl.appendChild(allBtn);
+        }
+
         resEl.style.display = 'block';
       } catch (e) {
         console.error(e);
@@ -444,7 +431,7 @@
       }
     }
 
-    // --- TikTok downloader ---
+    // --- TikTok downloader (tidak diubah) ---
     async function dlTT() {
       const url = document.getElementById('tt-url').value.trim();
       const load = document.getElementById('tt-load');
@@ -462,7 +449,6 @@
         document.getElementById('tt-thumb').src = thumbnail || '';
         document.getElementById('tt-title').textContent = title || '';
 
-        // HD
         const elHD = document.getElementById('tt-hd');
         if (video_hd) {
           elHD.style.display = 'block';
@@ -473,7 +459,6 @@
           elHD.onclick = null;
         }
 
-        // SD
         const elSD = document.getElementById('tt-sd');
         if (video_sd) {
           elSD.style.display = 'block';
@@ -484,7 +469,6 @@
           elSD.onclick = null;
         }
 
-        // MP3
         const elMP3 = document.getElementById('tt-mp3');
         if (mp3) {
           elMP3.style.display = 'block';
@@ -495,7 +479,6 @@
           elMP3.onclick = null;
         }
 
-        // If API returns images array for slideshow, render similarly to IG
         if (Array.isArray(json.result.images) && json.result.images.length) {
           result.innerHTML = '';
           const grid = document.createElement('div');
