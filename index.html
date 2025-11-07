@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Cecilefy Downloader</title>
+  <title>Tikdownload Downloader</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     :root {
@@ -53,11 +53,11 @@
 </head>
 <body>
 
-  <h1>Cecilefy Downloader</h1>
+  <h1>Tikdownload Downloader</h1>
 
   <div class="selector">
-    <button id="btnIG" onclick="selectTab('ig')">Instagram</button>
     <button id="btnTT" onclick="selectTab('tt')">TikTok</button>
+    <button id="btnIG" onclick="selectTab('ig')">Instagram</button>
   </div>
 
   <!-- Instagram -->
@@ -84,7 +84,7 @@
     </div>
   </div>
 
-  <footer>© 2025 Cecilefy Downloader</footer>
+  <footer>© 2025 Tikdownload Downloader</footer>
 
   <script>
     const buttons = {
@@ -148,17 +148,17 @@
       // decide suffix: only '-hd' or '-sd' if resolution provided and type != 'mp3'
       let suffix = '';
       if (type && type.toLowerCase() === 'mp3') {
-        suffix = ''; // mp3 has no suffix
+        suffix = ''; // mp3 no suffix
       } else {
         if (resolution && resolution.trim() !== '') {
-          // only accept hd or sd commonly; otherwise use as-is
-          const r = resolution.trim().toLowerCase();
-          if (r === 'HD' || r === 'SD') suffix = `-${r}`;
-          else suffix = `-${r}`;
+          const r = resolution.trim().toUpperCase(); // <-- ini kuncinya
+          suffix = `-${r}`; // hasilnya jadi -HD atau -SD
         }
       }
 
-      return `Cecilefy.xyz_${rnd}${suffix}.${ext}`;
+      }
+
+      return `Tikdownload.live_${rnd}${suffix}.${ext}`;
     }
 
     // Download via proxy (creates a link to your proxy endpoint)
@@ -190,7 +190,7 @@
         const contentType = res.headers.get('Content-Type') || '';
         const blob = await res.blob();
         const ext = inferExtension(fileUrl, contentType);
-        const filename = suggestedFilename || `Cecilefy.xyz_${rand6()}.${ext}`;
+        const filename = suggestedFilename || `Tikdownload.live_${rand6()}.${ext}`;
 
         const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -344,5 +344,6 @@
   </script>
 </body>
 </html>
+
 
 
