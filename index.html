@@ -80,7 +80,7 @@
     <p style="color:#777;margin-bottom:10px;">Unduh video TikTok tanpa watermark</p>
     <input id="tt-url" type="url" placeholder="https://vt.tiktok.com/xxxxx">
     <button class="download" onclick="dlTT()">Download</button>
-    <div class="loading" id="tt-load">⏳ Mengambil video...</div>
+    <div class="loading" id="tt-load">⏳ Mengambil Data...</div>
     <div class="result" id="tt-res">
       <img id="tt-thumb" alt="Thumbnail">
       <h4 id="tt-title"></h4>
@@ -356,7 +356,7 @@
           const guessedType = isImageUrl(item.url) ? 'image' : 'ig';
           const guessedRes = item.resolution || ((isImageUrl(item.url) && /hd/i.test(item.url)) ? 'hd' : '');
           const suggestedName = buildFilename(guessedType, guessedRes, item.url, item.contentType || '');
-          const btn = makeDownloadButton(item.url, `Download #${idx+1}`, suggestedName);
+          const btn = makeDownloadButton(item.url, `Download`, suggestedName);
           container.appendChild(btn);
 
           batchForDownload.push({
@@ -450,7 +450,7 @@
             im.style.borderRadius = '10px';
             div.appendChild(im);
             const suggested = buildFilename('tt', '', imgUrl);
-            const btn = makeDownloadButton(imgUrl, `Download #${idx+1}`, suggested);
+            const btn = makeDownloadButton(imgUrl, `Download`, suggested);
             div.appendChild(btn);
             result.appendChild(div);
           });
@@ -467,3 +467,4 @@
   </script>
 </body>
 </html>
+
