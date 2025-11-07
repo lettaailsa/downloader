@@ -65,6 +65,11 @@
   <div class="card" id="card-ig">
     <p style="color:#777;margin-bottom:10px;">Unduh foto & video dari Instagram</p>
     <input id="ig-url" type="url" placeholder="https://www.instagram.com/p/xxxxx">
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+      <label style="color:#aaa;font-size:0.9rem;">Max images:</label>
+      <input id="ig-max" type="number" min="1" max="100" value="10" style="width:80px;padding:8px;border-radius:8px;border:none;background:#111;color:#fff;outline:1px solid #333;">
+      <button class="dlbtn" id="ig-download-all" style="display:none;width:auto;padding:8px 12px;">Download All</button>
+    </div>
     <button class="download" onclick="dlIG()">Download</button>
     <div class="loading" id="ig-load">⏳ Mengambil data...</div>
     <div class="result" id="ig-res"></div>
@@ -235,45 +240,141 @@
       fallbackOpen(fileUrl);
     }
 
+    // ---------- tambahan util untuk multiple images ----------
+    function isImageUrl(url) {
+      if (!url) return false;
+      try {
+        // check extension first
+        const path = (new URL(url)).pathname;
+        const m = path.match(/\.([a-z0-9]{2,5})$/i);
+        if (m && ['jpg','jpeg','png','webp','gif','bmp','heic','heif'].includes(m[1].toLowerCase())) return true;
+      } catch(e){}
+      // fallback: data:image or common image strings
+      return /(^data:image\/)|image\//i.test(url);
+    }
+
+    function makeDownloadButton(url, label, suggestedName) {
+      const btn = document.createElement('button');
+      btn.className = 'dlbtn';
+      btn.textContent = label || 'Download';
+      btn.addEventListener('click', () => handleDownload(url, suggestedName));
+      return btn;
+    }
+
+    async function batchDownload(items) {
+      if (!items || !items.length) return alert('Tidak ada file untuk didownload.');
+      const proceed = confirm(`Mulai mendownload ${items.length} file satu per satu? Pastikan proxy aktif jika perlu.`);
+      if (!proceed) return;
+      for (let i = 0; i < items.length; i++) {
+        const it = items[i];
+        try {
+          const suggested = buildFilename(it.type || 'ig', it.resolution || '', it.url, it.contentType || '');
+          // coba fetchAndSave dulu (may fail CORS), kalau gagal fallback ke handleDownload
+          const ok = await fetchAndSave(it.url, suggested);
+          if (!ok) {
+            await handleDownload(it.url, suggested);
+          }
+          await new Promise(r => setTimeout(r, 400)); // jeda kecil
+        } catch (e) {
+          console.error('batchDownload item error', e);
+        }
+      }
+      alert('Proses batch download selesai.');
+    }
+
     // --- Instagram downloader ---
     async function dlIG() {
       const url = document.getElementById('ig-url').value.trim();
       const load = document.getElementById('ig-load');
       const resEl = document.getElementById('ig-res');
+      const maxInput = document.getElementById('ig-max');
+      const downloadAllBtn = document.getElementById('ig-download-all');
+
       if (!url) return alert('Masukkan link Instagram!');
       resEl.innerHTML = '';
       load.style.display = 'block';
+      downloadAllBtn.style.display = 'none';
       try {
         const api = `https://api.nvidiabotz.xyz/download/instagram?url=${encodeURIComponent(url)}`;
         const res = await fetch(api);
         const json = await res.json();
         if (!json.status || !json.result?.length) throw new Error('Tidak ada media ditemukan');
 
-        // clear and render using DOM (avoid inline onclick escaping issues)
+        // flatten/normalize items
+        const items = [];
+        json.result.forEach(entry => {
+          // entry bisa memiliki fields berbeda tergantung API; handle umum
+          if (Array.isArray(entry.media)) {
+            entry.media.forEach(m => items.push(m));
+          } else if (Array.isArray(entry.files)) {
+            entry.files.forEach(m => items.push(m));
+          } else {
+            // try common properties
+            const candidateUrl = entry.url_download || entry.url || entry.file || entry.src || entry.video || null;
+            const thumb = entry.thumbnail || entry.preview || entry.thumb || null;
+            const contentType = entry.contentType || '';
+            const typeGuess = isImageUrl(candidateUrl) ? 'image' : 'media';
+            const resolution = (/hd/i.test(candidateUrl) || /hd/i.test(entry.title || '')) ? 'hd' : '';
+            items.push({
+              url: candidateUrl,
+              thumbnail: thumb,
+              contentType,
+              type: typeGuess,
+              resolution
+            });
+          }
+        });
+
+        const max = Math.max(1, Math.min(100, Number(maxInput?.value || 10)));
+        const limited = items.filter(it => it.url).slice(0, max);
+
         resEl.innerHTML = '';
-        json.result.forEach((item, idx) => {
+        const batchForDownload = [];
+
+        limited.forEach((item, idx) => {
           const container = document.createElement('div');
           container.style.marginBottom = '15px';
+          container.style.textAlign = 'left';
 
-          const img = document.createElement('img');
-          img.src = item.thumbnail || '';
-          img.style.width = '100%';
-          img.style.borderRadius = '10px';
-          img.style.marginBottom = '6px';
-          container.appendChild(img);
+          const thumbUrl = item.thumbnail || (isImageUrl(item.url) ? item.url : '');
+          if (thumbUrl) {
+            const img = document.createElement('img');
+            img.src = thumbUrl;
+            img.style.width = '100%';
+            img.style.borderRadius = '10px';
+            img.style.marginBottom = '6px';
+            container.appendChild(img);
+          }
 
-          const btn = document.createElement('button');
-          btn.className = 'dlbtn';
-          btn.textContent = `Download #${idx+1}`;
-          // Guess type/resolution heuristics: use 'ig' and try detect hd in url
-          const guessedType = 'ig';
-          const guessedRes = (item.url_download && /hd/i.test(item.url_download)) ? 'hd' : '';
-          const suggestedName = buildFilename(guessedType, guessedRes, item.url_download);
-          btn.addEventListener('click', () => handleDownload(item.url_download, suggestedName));
+          const lbl = document.createElement('div');
+          lbl.style.color = '#ddd';
+          lbl.style.fontSize = '0.9rem';
+          lbl.style.marginBottom = '6px';
+          lbl.textContent = `Item #${idx+1} — ${isImageUrl(item.url) ? 'Image' : 'Media'}`;
+          container.appendChild(lbl);
+
+          const guessedType = isImageUrl(item.url) ? 'image' : 'ig';
+          const guessedRes = item.resolution || ((isImageUrl(item.url) && /hd/i.test(item.url)) ? 'hd' : '');
+          const suggestedName = buildFilename(guessedType, guessedRes, item.url, item.contentType || '');
+          const btn = makeDownloadButton(item.url, `Download #${idx+1}`, suggestedName);
           container.appendChild(btn);
+
+          batchForDownload.push({
+            url: item.url,
+            contentType: item.contentType || '',
+            type: guessedType,
+            resolution: guessedRes
+          });
 
           resEl.appendChild(container);
         });
+
+        if (batchForDownload.length > 0) {
+          downloadAllBtn.style.display = 'inline-block';
+          downloadAllBtn.onclick = () => batchDownload(batchForDownload);
+        } else {
+          downloadAllBtn.style.display = 'none';
+        }
 
         resEl.style.display = 'block';
       } catch(e) {
@@ -335,6 +436,26 @@
           elMP3.onclick = null;
         }
 
+        // If API returns images array for slideshow, render similarly to IG
+        if (Array.isArray(json.result.images) && json.result.images.length) {
+          // clear default video UI area
+          result.innerHTML = '';
+          const max = 100; // could be controlled via an input if desired
+          json.result.images.slice(0, max).forEach((imgUrl, idx) => {
+            const div = document.createElement('div');
+            div.style.marginBottom = '12px';
+            const im = document.createElement('img');
+            im.src = imgUrl;
+            im.style.width = '100%';
+            im.style.borderRadius = '10px';
+            div.appendChild(im);
+            const suggested = buildFilename('tt', '', imgUrl);
+            const btn = makeDownloadButton(imgUrl, `Download #${idx+1}`, suggested);
+            div.appendChild(btn);
+            result.appendChild(div);
+          });
+        }
+
         result.style.display = 'block';
       } catch(e) {
         console.error(e);
@@ -346,12 +467,3 @@
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
