@@ -65,9 +65,6 @@
   <div class="card" id="card-ig">
     <p style="color:#777;margin-bottom:10px;">Unduh foto & video dari Instagram</p>
     <input id="ig-url" type="url" placeholder="https://www.instagram.com/p/xxxxx">
-    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
-      <button class="dlbtn" id="ig-download-all" style="display:none;width:auto;padding:8px 12px;">Download All</button>
-    </div>
     <button class="download" onclick="dlIG()">Download</button>
     <div class="loading" id="ig-load">⏳ Mengambil data...</div>
     <div class="result" id="ig-res"></div>
@@ -259,27 +256,6 @@
       return btn;
     }
 
-    async function batchDownload(items) {
-      if (!items || !items.length) return alert('Tidak ada file untuk didownload.');
-      const proceed = confirm(`Mulai mendownload ${items.length} file satu per satu? Pastikan proxy aktif jika perlu.`);
-      if (!proceed) return;
-      for (let i = 0; i < items.length; i++) {
-        const it = items[i];
-        try {
-          const suggested = buildFilename(it.type || 'ig', it.resolution || '', it.url, it.contentType || '');
-          // coba fetchAndSave dulu (may fail CORS), kalau gagal fallback ke handleDownload
-          const ok = await fetchAndSave(it.url, suggested);
-          if (!ok) {
-            await handleDownload(it.url, suggested);
-          }
-          await new Promise(r => setTimeout(r, 400)); // jeda kecil
-        } catch (e) {
-          console.error('batchDownload item error', e);
-        }
-      }
-      alert('Proses batch download selesai.');
-    }
-
     // --- Instagram downloader ---
     async function dlIG() {
       const url = document.getElementById('ig-url').value.trim();
@@ -465,3 +441,4 @@
   </script>
 </body>
 </html>
+
