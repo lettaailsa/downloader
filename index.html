@@ -256,6 +256,27 @@
       return btn;
     }
 
+    async function batchDownload(items) {
+      if (!items || !items.length) return alert('Tidak ada file untuk didownload.');
+      const proceed = confirm(`Mulai mendownload ${items.length} file satu per satu? Pastikan proxy aktif jika perlu.`);
+      if (!proceed) return;
+      for (let i = 0; i < items.length; i++) {
+        const it = items[i];
+        try {
+          const suggested = buildFilename(it.type || 'ig', it.resolution || '', it.url, it.contentType || '');
+          // coba fetchAndSave dulu (may fail CORS), kalau gagal fallback ke handleDownload
+          const ok = await fetchAndSave(it.url, suggested);
+          if (!ok) {
+            await handleDownload(it.url, suggested);
+          }
+          await new Promise(r => setTimeout(r, 400)); // jeda kecil
+        } catch (e) {
+          console.error('batchDownload item error', e);
+        }
+      }
+      alert('Proses batch download selesai.');
+    }
+
     // --- Instagram downloader ---
     async function dlIG() {
       const url = document.getElementById('ig-url').value.trim();
@@ -441,5 +462,6 @@
   </script>
 </body>
 </html>
+
 
 
