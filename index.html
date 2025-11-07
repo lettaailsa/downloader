@@ -154,210 +154,148 @@
       return `TikDownload.live_${rnd}${suffix}.${ext}`;
     }
 
-    function downloadViaProxy(fileUrl, suggestedFilename) {
-      if (!proxyBase) return false;
-      try {
-        const params = new URLSearchParams({ url: fileUrl, filename: suggestedFilename });
-        const proxyUrl = `${proxyBase}?${params.toString()}`;
-        const a = document.createElement('a');
-        a.href = proxyUrl;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        return true;
-      } catch (e) {
-        console.error('downloadViaProxy error', e);
-        return false;
-      }
-    }
-
-    async function fetchAndSave(fileUrl, suggestedFilename) {
+    async function handleDownload(fileUrl, suggestedFilename) {
       try {
         const res = await fetch(fileUrl);
-        if (!res.ok) throw new Error('Upstream not ok: ' + res.status);
-        const contentType = res.headers.get('Content-Type') || '';
         const blob = await res.blob();
-        const ext = inferExtension(fileUrl, contentType);
-        const filename = suggestedFilename || `TikDownload.live_${rand6()}.${ext}`;
         const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = blobUrl;
-        a.download = filename;
+        a.download = suggestedFilename;
         document.body.appendChild(a);
         a.click();
         a.remove();
         setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-        return true;
-      } catch (err) {
-        console.warn('fetchAndSave failed', err);
-        return false;
-      }
-    }
-
-    function fallbackOpen(fileUrl) {
-      try {
-        window.open(fileUrl, '_blank');
-        alert('Tidak bisa mendownload langsung (CORS). Halaman file dibuka di tab baru — simpan manual. Untuk nama file sesuai template, jalankan proxy dan set proxyBase.');
       } catch (e) {
-        alert('Gagal membuka file langsung. ' + (e && e.message ? e.message : ''));
+        window.open(fileUrl, '_blank');
       }
     }
 
-    async function handleDownload(fileUrl, suggestedFilename) {
-      if (!fileUrl) return alert('URL tidak tersedia untuk didownload.');
-      if (proxyBase) {
-        const ok = downloadViaProxy(fileUrl, suggestedFilename);
-        if (ok) return;
-      }
-      const okFetch = await fetchAndSave(fileUrl, suggestedFilename);
-      if (okFetch) return;
-      fallbackOpen(fileUrl);
-    }
+    // ✅ FIXED: Gambar tidak lagi tampil tombol “Download Video”
+    async function dlIG() {
+      const url = document.getElementById('ig-url').value.trim();
+      const load = document.getElementById('ig-load');
+      const resEl = document.getElementById('ig-res');
 
-    function isImageUrl(url) {
-      if (!url) return false;
+      if (!url) return alert('Masukkan link Instagram!');
+      resEl.innerHTML = '';
+      load.style.display = 'block';
+
+      function looksLikeImage(u) { return /\.(jpe?g|png|webp|gif|bmp|heic|heif)(?:$|\?)/i.test(u || ''); }
+      function looksLikeVideo(u) { return /\.(mp4|webm|mov|m4v|m3u8)(?:$|\?)/i.test(u || ''); }
+
       try {
-        const path = (new URL(url)).pathname;
-        const m = path.match(/\.([a-z0-9]{2,5})$/i);
-        if (m && ['jpg','jpeg','png','webp','gif','bmp','heic','heif'].includes(m[1].toLowerCase())) return true;
-      } catch(e){}
-      return /(^data:image\/)|image\//i.test(url);
-    }
+        const api = `https://api.nvidiabotz.xyz/download/instagram?url=${encodeURIComponent(url)}`;
+        const res = await fetch(api);
+        const json = await res.json();
+        if (!json.status || !json.result) throw new Error('Tidak ada media ditemukan');
 
-    function makeDownloadButton(url, label, suggestedName) {
-      const btn = document.createElement('button');
-      btn.className = 'dlbtn';
-      btn.textContent = label || 'Download';
-      btn.addEventListener('click', () => handleDownload(url, suggestedName));
-      return btn;
-    }
+        let raw = Array.isArray(json.result) ? json.result : [json.result];
+        const entries = [];
+        raw.forEach(e => {
+          if (Array.isArray(e.media)) e.media.forEach(m => entries.push(m));
+          else if (Array.isArray(e.files)) e.files.forEach(m => entries.push(m));
+          else entries.push(e);
+        });
 
-    async function batchDownload(items) {
-      if (!items || !items.length) return alert('Tidak ada file untuk didownload.');
-      const proceed = confirm(`Mulai mendownload ${items.length} file satu per satu? Pastikan proxy aktif jika perlu.`);
-      if (!proceed) return;
-      for (let i = 0; i < items.length; i++) {
-        const it = items[i];
-        try {
-          const suggested = buildFilename(it.type || 'ig', it.resolution || '', it.url, it.contentType || '');
-          const ok = await fetchAndSave(it.url, suggested);
-          if (!ok) {
-            await handleDownload(it.url, suggested);
+        resEl.innerHTML = '';
+
+        entries.forEach(entry => {
+          const candidateFields = [
+            entry.url_download, entry.url, entry.file, entry.src, entry.video,
+            entry.video_url, entry.mp4, entry.mp4_url, entry.media_url, entry.display_url, entry.hd_url
+          ];
+          const candidate = (candidateFields.find(x => x && typeof x === 'string') || '').trim();
+          const thumb = entry.thumbnail || entry.preview || entry.thumb || entry.poster || entry.display_url || candidate;
+          const contentType = (entry.contentType || entry.type || entry.mime || '').toLowerCase();
+          const mediaTypeFlag = (entry.media_type || entry.mediaType || '').toLowerCase();
+          const title = entry.title || entry.caption || '';
+
+          let isVideo = false;
+          if (
+            entry.is_video === true ||
+            /video/.test(contentType) ||
+            /video/.test(mediaTypeFlag) ||
+            looksLikeVideo(candidate)
+          ) {
+            isVideo = true;
           }
-          await new Promise(r => setTimeout(r, 400));
-        } catch (e) {
-          console.error('batchDownload item error', e);
-        }
+
+          // override kalau URL-nya gambar
+          if (looksLikeImage(candidate) && !looksLikeVideo(candidate)) {
+            isVideo = false;
+          }
+
+          const container = document.createElement('div');
+          container.style.marginBottom = '15px';
+          container.style.textAlign = 'left';
+
+          const previewImg = document.createElement('img');
+          previewImg.src = thumb || candidate || '';
+          previewImg.style.width = '100%';
+          previewImg.style.borderRadius = '10px';
+          previewImg.style.marginBottom = '6px';
+          container.appendChild(previewImg);
+
+          if (title) {
+            const lbl = document.createElement('div');
+            lbl.style.color = '#ddd';
+            lbl.style.fontSize = '0.9rem';
+            lbl.style.marginBottom = '6px';
+            lbl.textContent = title;
+            container.appendChild(lbl);
+          }
+
+          const suggestedName = buildFilename(isVideo ? 'video' : 'image', isVideo ? 'hd' : '', candidate || thumb, contentType);
+          const btn = document.createElement('button');
+          btn.className = 'dlbtn';
+          btn.textContent = isVideo ? 'Download Video' : 'Download Image';
+          btn.onclick = () => handleDownload(candidate, suggestedName);
+          container.appendChild(btn);
+
+          resEl.appendChild(container);
+        });
+
+        resEl.style.display = 'block';
+      } catch (e) {
+        console.error(e);
+        alert(e.message || 'Server error');
+      } finally {
+        load.style.display = 'none';
       }
-      alert('Proses batch download selesai.');
     }
 
-    // --- Instagram downloader (MODIFIED: thumbnail-only, no "Video" text, no Download All)
-async function dlIG() {
-  const url = document.getElementById('ig-url').value.trim();
-  const load = document.getElementById('ig-load');
-  const resEl = document.getElementById('ig-res');
-
-  if (!url) return alert('Masukkan link Instagram!');
-  resEl.innerHTML = '';
-  load.style.display = 'block';
-
-  function looksLikeImage(u) { return /\.(jpe?g|png|webp|gif|bmp|heic|heif)(?:$|\?)/i.test(u || ''); }
-  function looksLikeVideo(u) { return /\.(mp4|webm|mov|m4v|m3u8)(?:$|\?)/i.test(u || '') || /\/video\/|\.mp4|video=|format=mp4/i.test(u || ''); }
-
-  try {
-    const api = `https://api.nvidiabotz.xyz/download/instagram?url=${encodeURIComponent(url)}`;
-    const res = await fetch(api);
-    const json = await res.json();
-    if (!json.status || !json.result) throw new Error('Tidak ada media ditemukan');
-
-    // normalize to array
-    let raw = Array.isArray(json.result) ? json.result : [json.result];
-
-    // flatten nested arrays
-    const entries = [];
-    raw.forEach(e => {
-      if (Array.isArray(e.media)) e.media.forEach(m => entries.push(m));
-      else if (Array.isArray(e.files)) e.files.forEach(m => entries.push(m));
-      else entries.push(e);
-    });
-
-    resEl.innerHTML = '';
-
-    entries.forEach(entry => {
-      // candidate file fields
-      const candidateFields = [
-        entry.url_download, entry.url, entry.file, entry.src, entry.video,
-        entry.video_url, entry.mp4, entry.mp4_url, entry.media_url, entry.display_url, entry.hd_url
-      ];
-      const candidate = (candidateFields.find(x => x && typeof x === 'string') || '').toString().trim();
-
-      const thumb = entry.thumbnail || entry.preview || entry.thumb || entry.poster || entry.display_url || null;
-      const contentType = (entry.contentType || entry.type || entry.mime || '').toString();
-      const title = entry.title || entry.caption || '';
-
-      // signals for video - **STRICTER**: only explicit flags, content-type or explicit video-looking URL
-      const explicitVideoFlag = (typeof entry.is_video !== 'undefined') ? !!entry.is_video : null;
-      const mediaTypeFlag = (entry.media_type || entry.mediaType || '').toString().toLowerCase();
-
-      const isVideo = (
-        explicitVideoFlag === true ||
-        /video/i.test(contentType) ||
-        /video/i.test(mediaTypeFlag) ||
-        looksLikeVideo(candidate) ||
-        looksLikeVideo(thumb)
-      );
-
-      // container (UI unchanged)
-      const container = document.createElement('div');
-      container.style.marginBottom = '15px';
-      container.style.textAlign = 'left';
-
-      // show thumbnail only (no <video>)
-      const previewImg = document.createElement('img');
-      previewImg.src = thumb || candidate || '';
-      previewImg.style.width = '100%';
-      previewImg.style.borderRadius = '10px';
-      previewImg.style.marginBottom = '6px';
-      container.appendChild(previewImg);
-
-      // show title only if exists
-      if (title) {
-        const lbl = document.createElement('div');
-        lbl.style.color = '#ddd';
-        lbl.style.fontSize = '0.9rem';
-        lbl.style.marginBottom = '6px';
-        lbl.textContent = title;
-        container.appendChild(lbl);
-      }
-
-      // button text depends on isVideo
-      const suggestedName = buildFilename(isVideo ? 'video' : 'image', isVideo ? 'hd' : '', candidate || thumb, contentType);
-      const btn = document.createElement('button');
-      btn.className = 'dlbtn';
-      btn.textContent = isVideo ? 'Download Video' : 'Download Image';
-      btn.onclick = () => {
-        if (!candidate) {
-          const openUrl = entry.page_url || entry.post_url || entry.permalink || url;
-          window.open(openUrl, '_blank');
-          return;
-        }
-        handleDownload(candidate, suggestedName);
-      };
-      container.appendChild(btn);
-
-      resEl.appendChild(container);
-    });
-
-    // do NOT add Download All (per request)
-    resEl.style.display = 'block';
-  } catch (e) {
-    console.error(e);
-    alert(e.message || 'Server error');
-  } finally {
-    load.style.display = 'none';
-  }
-}
+    // --- TikTok downloader (unchanged) ---
+    async function dlTT() {
+      const url = document.getElementById('tt-url').value.trim();
+      const load = document.getElementById('tt-load');
+      const result = document.getElementById('tt-res');
+      if (!url) return alert('Masukkan link TikTok!');
+      load.style.display = 'block';
+      result.style.display = 'none';
+      try {
+        const api = `https://api.nvidiabotz.xyz/download/tiktok?url=${encodeURIComponent(url)}`;
+        const res = await fetch(api);
+        const json = await res.json();
+        if (!json.status) throw new Error(json.message || 'Gagal');
+        const { video_hd, video_sd, mp3, thumbnail, title } = json.result;
+        document.getElementById('tt-thumb').src = thumbnail || '';
+        document.getElementById('tt-title').textContent = title || '';
+        const elHD = document.getElementById('tt-hd');
+        const elSD = document.getElementById('tt-sd');
+        const elMP3 = document.getElementById('tt-mp3');
+        if (video_hd) { elHD.style.display = 'block'; elHD.onclick = () => handleDownload(video_hd, buildFilename('tt','hd',video_hd)); }
+        else elHD.style.display = 'none';
+        if (video_sd) { elSD.style.display = 'block'; elSD.onclick = () => handleDownload(video_sd, buildFilename('tt','sd',video_sd)); }
+        else elSD.style.display = 'none';
+        if (mp3) { elMP3.style.display = 'block'; elMP3.onclick = () => handleDownload(mp3, buildFilename('mp3','',mp3)); }
+        else elMP3.style.display = 'none';
+        result.style.display = 'block';
+      } catch(e) {
+        console.error(e);
+        alert(e.message || 'Server error');
+      } finally { load.style.display = 'none'; }
+    }
   </script>
 </body>
 </html>
