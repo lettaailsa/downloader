@@ -65,6 +65,11 @@
   <div class="card" id="card-ig">
     <p style="color:#777;margin-bottom:10px;">Unduh foto & video dari Instagram</p>
     <input id="ig-url" type="url" placeholder="https://www.instagram.com/p/xxxxx">
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+      <label style="color:#aaa;font-size:0.9rem;">Max images:</label>
+      <input id="ig-max" type="number" min="1" max="100" value="10" style="width:80px;padding:8px;border-radius:8px;border:none;background:#111;color:#fff;outline:1px solid #333;">
+      <button class="dlbtn" id="ig-download-all" style="display:none;width:auto;padding:8px 12px;">Download All</button>
+    </div>
     <button class="download" onclick="dlIG()">Download</button>
     <div class="loading" id="ig-load">⏳ Mengambil data...</div>
     <div class="result" id="ig-res"></div>
@@ -75,7 +80,7 @@
     <p style="color:#777;margin-bottom:10px;">Unduh video TikTok tanpa watermark</p>
     <input id="tt-url" type="url" placeholder="https://vt.tiktok.com/xxxxx">
     <button class="download" onclick="dlTT()">Download</button>
-    <div class="loading" id="tt-load">⏳ Mengambil Data...</div>
+    <div class="loading" id="tt-load">⏳ Mengambil data...</div>
     <div class="result" id="tt-res">
       <img id="tt-thumb" alt="Thumbnail">
       <h4 id="tt-title"></h4>
