@@ -1,18 +1,24 @@
-// server.js — Cecilefy Proxy (fixed: replace .bin if sniffed ext found)
+// server.js — Cecilefy Proxy (serve index.html + proxy)
 // node 18+ recommended
 const express = require('express');
 const stream = require('stream');
 const { pipeline } = require('stream');
 const { URL } = require('url');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Allow CORS for client requests (the frontend will call /proxy)
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   next();
 });
 
+// Serve static files (index.html, css, etc.) from repo root
+app.use(express.static(path.join(__dirname, '/')));
+
+// --- helper funcs (copied from your original) ---
 function isValidHttpUrl(string) {
   try {
     const u = new URL(string);
@@ -79,6 +85,7 @@ function sniffExtension(firstChunk) {
   return null;
 }
 
+// --- proxy endpoint (copied + preserved behavior) ---
 app.get('/proxy', async (req, res) => {
   const { url, filename } = req.query;
   if (!url || !isValidHttpUrl(url)) return res.status(400).send('Invalid url');
@@ -94,14 +101,9 @@ app.get('/proxy', async (req, res) => {
       extFromContentType(upstream.headers.get('content-type')) ||
       null;
 
-    // prepare dispositionName from client if provided
     let dispositionName = filename && filename.trim().length > 0 ? sanitizeFilename(filename) : null;
-
-    // If client provided a filename that already has an extension,
-    // we WILL later replace .bin if we detect a better ext.
     if (dispositionName && !dispositionName.includes('.') && ext) dispositionName += `.${ext}`;
 
-    // If ext unknown we may need to peek at first chunk to sniff
     if (!ext) {
       if (upstream.body && typeof upstream.body.getReader === 'function') {
         const nodeStream = stream.Readable.fromWeb(upstream.body);
@@ -114,7 +116,6 @@ app.get('/proxy', async (req, res) => {
           const sniffed = sniffExtension(firstChunk);
           if (sniffed) ext = sniffed;
 
-          // If client gave a filename that ends with .bin, and we sniffed ext, replace .bin with real ext
           if (dispositionName && dispositionName.toLowerCase().endsWith('.bin') && ext) {
             dispositionName = dispositionName.replace(/\.bin$/i, `.${ext}`);
           }
@@ -209,13 +210,11 @@ app.get('/proxy', async (req, res) => {
       }
     }
 
-    // Finalize ext/dispositionName if we didn't already
     ext = ext || 'bin';
     if (!dispositionName) {
       const rnd = Math.floor(100000 + Math.random() * 900000);
       dispositionName = `Cecilefy.xyz_${rnd}.${ext}`;
     } else {
-      // If client gave a name with .bin, replace it with sniffed ext
       if (dispositionName.toLowerCase().endsWith('.bin') && ext) {
         dispositionName = dispositionName.replace(/\.bin$/i, `.${ext}`);
       }
@@ -247,6 +246,11 @@ app.get('/proxy', async (req, res) => {
   }
 });
 
+// explicit root route (serve index.html)
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 app.listen(PORT, () => {
-  console.log(`Proxy running at http://localhost:${PORT}/proxy`);
+  console.log(`Proxy + frontend running at http://localhost:${PORT}/proxy`);
 });
