@@ -291,7 +291,7 @@
       alert('Proses batch download selesai.');
     }
 
-    // --- Instagram downloader ---
+    // --- Instagram downloader (MODIFIED) ---
     async function dlIG() {
       const url = document.getElementById('ig-url').value.trim();
       const load = document.getElementById('ig-load');
@@ -303,92 +303,158 @@
       resEl.innerHTML = '';
       load.style.display = 'block';
       if (downloadAllBtn) downloadAllBtn.style.display = 'none';
+
+      // helpers to guess types
+      function looksLikeImage(u) { return /\.(jpe?g|png|webp|gif|bmp|heic|heif)(?:$|\?)/i.test(u || ''); }
+      function looksLikeVideo(u) { return /\.(mp4|webm|mov|m4v|m3u8)(?:$|\?)/i.test(u || ''); }
+
       try {
         const api = `https://api.nvidiabotz.xyz/download/instagram?url=${encodeURIComponent(url)}`;
         const res = await fetch(api);
         const json = await res.json();
-        if (!json.status || !json.result?.length) throw new Error('Tidak ada media ditemukan');
+        if (!json.status || !json.result) throw new Error('Tidak ada media ditemukan');
 
-        // flatten/normalize items
-        const items = [];
-        json.result.forEach(entry => {
-          // entry bisa memiliki fields berbeda tergantung API; handle umum
-          if (Array.isArray(entry.media)) {
-            entry.media.forEach(m => items.push(m));
-          } else if (Array.isArray(entry.files)) {
-            entry.files.forEach(m => items.push(m));
-          } else {
-            // try common properties
-            const candidateUrl = entry.url_download || entry.url || entry.file || entry.src || entry.video || null;
-            const thumb = entry.thumbnail || entry.preview || entry.thumb || null;
-            const contentType = entry.contentType || '';
-            const typeGuess = isImageUrl(candidateUrl) ? 'image' : 'media';
-            const resolution = (/hd/i.test(candidateUrl) || /hd/i.test(entry.title || '')) ? 'hd' : '';
-            items.push({
-              url: candidateUrl,
-              thumbnail: thumb,
-              contentType,
-              type: typeGuess,
-              resolution
-            });
-          }
+        // normalize to array
+        let raw = Array.isArray(json.result) ? json.result : [json.result];
+
+        // flatten potential nested arrays
+        const entries = [];
+        raw.forEach(e => {
+          if (Array.isArray(e.media)) e.media.forEach(m => entries.push(m));
+          else if (Array.isArray(e.files)) e.files.forEach(m => entries.push(m));
+          else entries.push(e);
         });
 
-        const max = Math.max(1, Math.min(100, Number(maxInput?.value || 10)));
-        const limited = items.filter(it => it.url).slice(0, max);
-
+        // prepare display
         resEl.innerHTML = '';
         const batchForDownload = [];
 
-        limited.forEach((item, idx) => {
+        entries.forEach(entry => {
+          // try various fields that might contain file URL
+          const candidateFields = [
+            entry.url_download, entry.url, entry.file, entry.src, entry.video,
+            entry.video_url, entry.mp4, entry.mp4_url, entry.media_url, entry.display_url, entry.hd_url
+          ];
+          const candidate = (candidateFields.find(x => x && typeof x === 'string') || '').toString().trim();
+
+          const thumb = entry.thumbnail || entry.preview || entry.thumb || entry.poster || entry.display_url || null;
+          const contentType = (entry.contentType || entry.type || entry.mime || '').toString();
+          const title = entry.title || entry.caption || '';
+
+          // detect video using multiple signals
+          const explicitVideoFlag = (typeof entry.is_video !== 'undefined') ? !!entry.is_video : null;
+          const mediaTypeFlag = (entry.media_type || entry.mediaType || '').toString().toLowerCase();
+
+          const isVideo = (
+            explicitVideoFlag === true ||
+            /video/i.test(contentType) ||
+            /video/i.test(mediaTypeFlag) ||
+            looksLikeVideo(candidate) ||
+            looksLikeVideo(thumb) ||
+            (thumb && candidate && !looksLikeImage(candidate) && !looksLikeImage(thumb))
+          );
+
+          // container (keep same UI)
           const container = document.createElement('div');
           container.style.marginBottom = '15px';
           container.style.textAlign = 'left';
 
-          const thumbUrl = item.thumbnail || (isImageUrl(item.url) ? item.url : '');
-          if (thumbUrl) {
+          // preview: video element if video, else image
+          if (isVideo) {
+            if (candidate) {
+              const vid = document.createElement('video');
+              vid.controls = true;
+              vid.preload = 'none';
+              vid.style.width = '100%';
+              vid.style.borderRadius = '10px';
+              vid.style.marginBottom = '6px';
+              if (thumb) vid.poster = thumb;
+              const src = document.createElement('source');
+              src.src = candidate;
+              if (contentType) src.type = contentType;
+              vid.appendChild(src);
+              container.appendChild(vid);
+            } else if (thumb) {
+              const img = document.createElement('img');
+              img.src = thumb;
+              img.style.width = '100%';
+              img.style.borderRadius = '10px';
+              img.style.marginBottom = '6px';
+              container.appendChild(img);
+            }
+          } else {
+            // image preview prefer candidate else thumb
             const img = document.createElement('img');
-            img.src = thumbUrl;
+            img.src = candidate || thumb || '';
             img.style.width = '100%';
             img.style.borderRadius = '10px';
             img.style.marginBottom = '6px';
             container.appendChild(img);
           }
 
+          // minimal label
           const lbl = document.createElement('div');
           lbl.style.color = '#ddd';
           lbl.style.fontSize = '0.9rem';
           lbl.style.marginBottom = '6px';
+          lbl.textContent = title || (isVideo ? 'Video' : 'Image');
           container.appendChild(lbl);
 
-          const guessedType = isImageUrl(item.url) ? 'image' : 'ig';
-          const guessedRes = item.resolution || ((isImageUrl(item.url) && /hd/i.test(item.url)) ? 'hd' : '');
-          const suggestedName = buildFilename(guessedType, guessedRes, item.url, item.contentType || '');
-          const btn = makeDownloadButton(item.url, `Download Image`, suggestedName);
+          // suggested filename
+          const suggestedName = buildFilename(isVideo ? 'video' : 'image', isVideo ? 'hd' : '', candidate || thumb, contentType);
+
+          // button label depends on type
+          const btn = document.createElement('button');
+          btn.className = 'dlbtn';
+          btn.textContent = isVideo ? 'Download Video' : 'Download Image';
+          btn.onclick = () => {
+            if (!candidate) {
+              // fallback: open original post if no direct file URL
+              const openUrl = entry.page_url || entry.post_url || entry.permalink || url;
+              window.open(openUrl, '_blank');
+              return;
+            }
+            handleDownload(candidate, suggestedName);
+          };
           container.appendChild(btn);
 
-          batchForDownload.push({
-            url: item.url,
-            contentType: item.contentType || '',
-            type: guessedType,
-            resolution: guessedRes
-          });
-
+          // append to results
           resEl.appendChild(container);
+
+          // add to batch if candidate exists
+          if (candidate) {
+            batchForDownload.push({
+              url: candidate,
+              contentType,
+              type: isVideo ? 'video' : 'image',
+              resolution: isVideo ? 'hd' : '',
+              name: suggestedName
+            });
+          }
         });
 
-        // Hanya akses downloadAllBtn jika memang ada
+        // keep support for downloadAllBtn if present, else create Download All in results
         if (batchForDownload.length > 0) {
           if (downloadAllBtn) {
             downloadAllBtn.style.display = 'inline-block';
             downloadAllBtn.onclick = () => batchDownload(batchForDownload);
+          } else {
+            const allBtn = document.createElement('button');
+            allBtn.className = 'dlbtn';
+            allBtn.style.marginTop = '8px';
+            allBtn.textContent = 'Download All';
+            allBtn.onclick = async () => {
+              for (const f of batchForDownload) {
+                await handleDownload(f.url, f.name);
+                await new Promise(r => setTimeout(r, 350));
+              }
+            };
+            resEl.appendChild(allBtn);
           }
-        } else {
-          if (downloadAllBtn) downloadAllBtn.style.display = 'none';
         }
 
         resEl.style.display = 'block';
-      } catch(e) {
+      } catch (e) {
         console.error(e);
         alert(e.message || 'Server error');
       } finally {
