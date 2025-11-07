@@ -345,6 +345,7 @@
           lbl.style.color = '#ddd';
           lbl.style.fontSize = '0.9rem';
           lbl.style.marginBottom = '6px';
+          lbl.textContent = `Image ${idx+1}`;
           container.appendChild(lbl);
 
           // ===== DETEKSI IMAGE / VIDEO =====
@@ -375,7 +376,7 @@
           const suggestedName = buildFilename(guessedType, guessedRes, item.url, item.contentType || '');
 
           // buat tombol sesuai jenis
-          const btnLabel = finalIsImage ? 'Download Video';
+          const btnLabel = finalIsImage ? 'Download' : 'Download';
           const btn = makeDownloadButton(item.url, btnLabel, suggestedName);
           container.appendChild(btn);
 
@@ -473,7 +474,7 @@
             im.style.borderRadius = '10px';
             div.appendChild(im);
             const suggested = buildFilename('tt', '', imgUrl);
-            const btn = makeDownloadButton(imgUrl, `Download`, suggested);
+            const btn = makeDownloadButton(imgUrl, `Download Image`, suggested);
             div.appendChild(btn);
             result.appendChild(div);
           });
@@ -490,4 +491,3 @@
   </script>
 </body>
 </html>
-
