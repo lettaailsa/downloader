@@ -364,11 +364,16 @@
           resEl.appendChild(container);
         });
 
+        // Hanya akses downloadAllBtn jika memang ada
         if (batchForDownload.length > 0) {
-          downloadAllBtn.style.display = 'inline-block';
-          downloadAllBtn.onclick = () => batchDownload(batchForDownload);
+          if (downloadAllBtn) {
+            downloadAllBtn.style.display = 'inline-block';
+            downloadAllBtn.onclick = () => batchDownload(batchForDownload);
+          } else {
+            console.warn('Batch download ready but "Download All" button not present in DOM.');
+          }
         } else {
-          downloadAllBtn.style.display = 'none';
+          if (downloadAllBtn) downloadAllBtn.style.display = 'none';
         }
 
         resEl.style.display = 'block';
@@ -462,5 +467,6 @@
   </script>
 </body>
 </html>
+
 
 
