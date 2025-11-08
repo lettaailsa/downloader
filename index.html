@@ -69,7 +69,7 @@
     <div class="loading" id="ig-load">⏳ Mengambil data...</div>
     <div class="result" id="ig-res"></div>
 
-    <!-- Download More button: tampilkan setelah hasil muncul -->
+    <!-- Download More for IG (hidden until a download happens) -->
     <button class="dlbtn" id="ig-more" style="display:none;margin-top:10px;">Download More</button>
   </div>
 
@@ -86,6 +86,9 @@
       <button class="dlbtn" id="tt-sd">Download SD</button>
       <button class="dlbtn" id="tt-mp3">Download Audio</button>
     </div>
+
+    <!-- Download More for TT (hidden until a download happens) -->
+    <button class="dlbtn" id="tt-more" style="display:none;margin-top:10px;">Download More</button>
   </div>
 
   <footer>© 2025 TikDownload</footer>
@@ -207,13 +210,17 @@
 
     async function handleDownload(fileUrl, suggestedFilename) {
       if (!fileUrl) return alert('URL tidak tersedia untuk didownload.');
+      // 1) try proxy if configured
       if (proxyBase) {
         const ok = downloadViaProxy(fileUrl, suggestedFilename);
-        if (ok) return;
+        if (ok) return true;
       }
+      // 2) try fetch -> blob (may fail due to CORS)
       const okFetch = await fetchAndSave(fileUrl, suggestedFilename);
-      if (okFetch) return;
+      if (okFetch) return true;
+      // 3) fallback open
       fallbackOpen(fileUrl);
+      return true;
     }
 
     function isImageUrl(url) {
@@ -230,7 +237,12 @@
       const btn = document.createElement('button');
       btn.className = 'dlbtn';
       btn.textContent = label || 'Download';
-      btn.addEventListener('click', () => handleDownload(url, suggestedName));
+      btn.addEventListener('click', async () => {
+        await handleDownload(url, suggestedName);
+        // show appropriate Download More if in IG card (we only create these buttons in IG flow)
+        const igMore = document.getElementById('ig-more');
+        if (igMore) igMore.style.display = 'block';
+      });
       return btn;
     }
 
@@ -263,7 +275,7 @@
       const maxInput = document.getElementById('ig-max');
       const downloadAllBtn = document.getElementById('ig-download-all');
 
-      // hide more button initially
+      // hide more initially
       moreBtn.style.display = 'none';
       lastIGBatch = [];
 
@@ -420,13 +432,16 @@
           const btn = document.createElement('button');
           btn.className = 'dlbtn';
           btn.textContent = btnLabel;
-          btn.onclick = () => {
+          btn.onclick = async () => {
             if (!btnUrl) {
               const openUrl = entry.page_url || entry.post_url || entry.permalink || url;
               window.open(openUrl, '_blank');
               return;
             }
-            handleDownload(btnUrl, suggestedName);
+            await handleDownload(btnUrl, suggestedName);
+            // show Download More when user has triggered a download
+            const igMoreEl = document.getElementById('ig-more');
+            if (igMoreEl) igMoreEl.style.display = 'block';
           };
           container.appendChild(btn);
 
@@ -443,16 +458,24 @@
         // store for Download More
         lastIGBatch = batchForDownload;
 
-        // show Download More if there's >1 item (or show even for 1 if you want)
+        // show Download More if there's >0 item
         const moreBtnEl = document.getElementById('ig-more');
         if (lastIGBatch.length > 0) {
           moreBtnEl.style.display = 'block';
-          moreBtnEl.onclick = () => batchDownload(lastIGBatch);
+          // clicking Download More will reset the IG card (clear input + hide result) so user can input new link
+          moreBtnEl.onclick = () => {
+            document.getElementById('ig-url').value = '';
+            resEl.innerHTML = '';
+            resEl.style.display = 'none';
+            moreBtnEl.style.display = 'none';
+            lastIGBatch = [];
+            document.getElementById('ig-url').focus();
+          };
         } else {
           moreBtnEl.style.display = 'none';
         }
 
-        // Hanya akses downloadAllBtn jika memang ada (tetap kompatibel)
+        // Hanya akses downloadAllBtn jika memang ada
         if (batchForDownload.length > 0) {
           if (downloadAllBtn) {
             downloadAllBtn.style.display = 'inline-block';
@@ -476,6 +499,11 @@
       const url = document.getElementById('tt-url').value.trim();
       const load = document.getElementById('tt-load');
       const result = document.getElementById('tt-res');
+      const ttMoreBtn = document.getElementById('tt-more');
+
+      // hide more initially
+      ttMoreBtn.style.display = 'none';
+
       if (!url) return alert('Masukkan link TikTok!');
       load.style.display = 'block';
       result.style.display = 'none';
@@ -494,7 +522,11 @@
         if (video_hd) {
           elHD.style.display = 'block';
           const suggestedHD = buildFilename('tt', 'hd', video_hd);
-          elHD.onclick = () => handleDownload(video_hd, suggestedHD);
+          elHD.onclick = async () => {
+            await handleDownload(video_hd, suggestedHD);
+            // show Download More for TT after download
+            ttMoreBtn.style.display = 'block';
+          };
         } else {
           elHD.style.display = 'none';
           elHD.onclick = null;
@@ -505,7 +537,10 @@
         if (video_sd) {
           elSD.style.display = 'block';
           const suggestedSD = buildFilename('tt', 'sd', video_sd);
-          elSD.onclick = () => handleDownload(video_sd, suggestedSD);
+          elSD.onclick = async () => {
+            await handleDownload(video_sd, suggestedSD);
+            ttMoreBtn.style.display = 'block';
+          };
         } else {
           elSD.style.display = 'none';
           elSD.onclick = null;
@@ -516,7 +551,10 @@
         if (mp3) {
           elMP3.style.display = 'block';
           const suggestedMP3 = buildFilename('mp3', '', mp3);
-          elMP3.onclick = () => handleDownload(mp3, suggestedMP3);
+          elMP3.onclick = async () => {
+            await handleDownload(mp3, suggestedMP3);
+            ttMoreBtn.style.display = 'block';
+          };
         } else {
           elMP3.style.display = 'none';
           elMP3.onclick = null;
@@ -536,10 +574,21 @@
             div.appendChild(im);
             const suggested = buildFilename('tt', '', imgUrl);
             const btn = makeDownloadButton(imgUrl, `Download`, suggested);
+            // makeDownloadButton already shows ig-more when clicked — for TT we also show tt-more
+            btn.addEventListener('click', () => { ttMoreBtn.style.display = 'block'; });
             div.appendChild(btn);
             result.appendChild(div);
           });
         }
+
+        // configure tt-more reset behavior
+        ttMoreBtn.onclick = () => {
+          document.getElementById('tt-url').value = '';
+          result.innerHTML = '';
+          result.style.display = 'none';
+          ttMoreBtn.style.display = 'none';
+          document.getElementById('tt-url').focus();
+        };
 
         result.style.display = 'block';
       } catch(e) {
