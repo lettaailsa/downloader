@@ -93,7 +93,7 @@
   <!-- Spotify -->
   <div class="card" id="card-sp">
     <p style="color:#777;margin-bottom:10px;">Unduh audio dari Spotify</p>
-    <input id="sp-url" type="url" placeholder="https://open.spotify.com/track/xxxxx">
+    <input id="sp-url" type="url" placeholder="https://open.spotify.com/track/...">
     <button class="download" onclick="dlSP()">Download</button>
     <div class="loading" id="sp-load">⏳ Mengambil data...</div>
     <div class="result" id="sp-res"></div>
@@ -118,7 +118,7 @@
       document.getElementById('card-'+tab).classList.add('active');
       buttons[tab].classList.add('active');
     }
-    selectTab('tt'); // default Instagram
+    selectTab('tt'); // default
 
     // ---------------------
     // CONFIG: jika kamu punya proxy (express/server) yang jalan,
@@ -152,7 +152,7 @@
       return 'bin';
     }
 
-    // Build filename: Cecilefy.xyz_6digits + suffix + .ext
+    // Build filename
     function buildFilename(type, resolution, url, contentType) {
       const rnd = rand6();
       const ext = inferExtension(url, contentType);
@@ -233,7 +233,7 @@
       return false;
     }
 
-    // ---------- tambahan util untuk multiple images ----------
+    // helper
     function isImageUrl(url) {
       if (!url) return false;
       try {
@@ -244,14 +244,13 @@
       return /(^data:image\/)|image\//i.test(url);
     }
 
-    // Make download button — after download completes, show Download More for the card
+    // Make download button — shows Download More for card after download
     function makeDownloadButton(url, label, suggestedName) {
       const btn = document.createElement('button');
       btn.className = 'dlbtn';
       btn.textContent = label || 'Download';
       btn.addEventListener('click', async () => {
         await handleDownload(url, suggestedName);
-        // show Download More for the corresponding card (container)
         const card = btn.closest('.card');
         if (card && card.id === 'card-ig') {
           const igMore = document.getElementById('ig-more');
@@ -550,7 +549,7 @@
       }
     }
 
-    // --- Spotify downloader (baru) ---
+    // --- Spotify downloader (NEW) ---
     async function dlSP() {
       const url = document.getElementById('sp-url').value.trim();
       const load = document.getElementById('sp-load');
@@ -561,80 +560,48 @@
       load.style.display = 'block';
 
       try {
-        const api = `https://api.vreden.my.id/api/v1/download/spotify?url=${encodeURIComponent(url)}`;
-        const res = await fetch(api);
-        const json = await res.json();
-        if (!json || (!json.status && !json.result)) throw new Error('Tidak ada data dari Spotify API');
+        const apiRaw = `https://api.vreden.my.id/api/v1/download/spotify?url=${encodeURIComponent(url)}`;
 
-        // Normalize result: look for likely fields containing downloadable URLs
-        // Possible fields: result.url, result.download, result.mp3, result.data, or array of files
-        const entries = [];
-        const pushIfUrl = (u, info = {}) => { if (u && typeof u === 'string') entries.push(Object.assign({url: u}, info)); };
+        // Use proxyBase to fetch API if available (avoids CORS). If proxyBase empty, call API directly.
+        const fetchUrl = proxyBase ? `${proxyBase}?url=${encodeURIComponent(apiRaw)}` : apiRaw;
+        const r = await fetch(fetchUrl);
+        if (!r.ok) throw new Error('Gagal mengambil data Spotify: ' + r.status);
+        const json = await r.json();
+        if (!json || !json.status || !json.result) throw new Error('Tidak ada data dari Spotify');
 
-        // If API returns array
-        if (Array.isArray(json.result)) {
-          json.result.forEach(item => {
-            if (typeof item === 'string') pushIfUrl(item);
-            else if (item && typeof item === 'object') {
-              pushIfUrl(item.url || item.download || item.mp3 || item.audio, { title: item.title || item.name || '' , thumbnail: item.thumb || item.thumbnail || '' , contentType: item.mime || ''});
-            }
-          });
-        } else if (json.result && typeof json.result === 'object') {
-          const r = json.result;
-          // try multiple known keys
-          pushIfUrl(r.url || r.download || r.mp3 || r.audio || r.file, { title: r.title || r.name || '', thumbnail: r.thumbnail || r.thumb || r.cover || '' , contentType: r.mime || '' });
-          // if result has files array
-          if (Array.isArray(r.files)) {
-            r.files.forEach(f => {
-              if (typeof f === 'string') pushIfUrl(f);
-              else if (f && typeof f === 'object') pushIfUrl(f.url || f.download || f.mp3 || f.audio, { title: f.title || f.name || '', thumbnail: f.thumbnail || f.thumb || '' , contentType: f.mime || ''});
-            });
-          }
-        } else if (typeof json === 'object') {
-          // fallback try top-level fields
-          pushIfUrl(json.url || json.download || json.mp3 || json.audio, { title: json.title || '' , thumbnail: json.thumbnail || '' , contentType: json.mime || ''});
+        // Expected fields from sample:
+        // result: { id, title, artists, album, cover_url, duration_ms, release_date, download }
+        const res = json.result;
+
+        // Build UI: cover, title/artist, download button
+        const container = document.createElement('div');
+        container.style.textAlign = 'left';
+
+        if (res.cover_url) {
+          const img = document.createElement('img');
+          img.src = res.cover_url;
+          img.style.width = '100%';
+          img.style.borderRadius = '10px';
+          img.style.marginBottom = '8px';
+          container.appendChild(img);
         }
 
-        // Deduplicate and filter
-        const seen = new Set();
-        const final = entries.map(e => ({ url: e.url, title: e.title || '', thumbnail: e.thumbnail || '', contentType: e.contentType || '' }))
-          .filter(e => e.url && !seen.has(e.url) && (seen.add(e.url), true));
+        // Title & artist (ke-2 baris, kept minimal)
+        const meta = document.createElement('div');
+        meta.style.color = '#ddd';
+        meta.style.fontSize = '0.95rem';
+        meta.style.marginBottom = '8px';
+        meta.textContent = (res.title ? res.title : '') + (res.artists ? (res.title ? ' — ' : '') + res.artists : '');
+        if (meta.textContent) container.appendChild(meta);
 
-        if (!final.length) throw new Error('Tidak menemukan file untuk didownload dari response Spotify');
+        // suggested filename and download button
+        const suggested = buildFilename('mp3', '', res.download || url, '');
+        const dlBtn = makeDownloadButton(res.download || res.url || url, 'Download', suggested);
+        container.appendChild(dlBtn);
 
-        // Render results
-        resEl.innerHTML = '';
-        final.forEach((item, idx) => {
-          const container = document.createElement('div');
-          container.style.marginBottom = '15px';
-          container.style.textAlign = 'left';
+        resEl.appendChild(container);
 
-          if (item.thumbnail) {
-            const img = document.createElement('img');
-            img.src = item.thumbnail;
-            img.style.width = '100%';
-            img.style.borderRadius = '10px';
-            img.style.marginBottom = '6px';
-            container.appendChild(img);
-          }
-
-          if (item.title) {
-            const lbl = document.createElement('div');
-            lbl.style.color = '#ddd';
-            lbl.style.fontSize = '0.95rem';
-            lbl.style.marginBottom = '6px';
-            lbl.textContent = item.title;
-            container.appendChild(lbl);
-          }
-
-          const suggested = buildFilename('mp3','', item.url, item.contentType || '');
-          const btn = makeDownloadButton(item.url, 'Download', suggested);
-          container.appendChild(btn);
-
-          resEl.appendChild(container);
-        });
-
-        // show Download More for Spotify immediately (and also after download via makeDownloadButton)
+        // show Download More immediately (user asked it appears before download too)
         const spMore = document.getElementById('sp-more');
         if (spMore) spMore.style.display = 'block';
 
@@ -646,6 +613,7 @@
         load.style.display = 'none';
       }
     }
+
   </script>
 </body>
 </html>
