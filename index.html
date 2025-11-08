@@ -39,8 +39,12 @@
     .selector button.active { background:linear-gradient(135deg,#555,#333); box-shadow:0 0 10px rgba(255,255,255,0.2) }
     .card { background:var(--card); border-radius:var(--radius); padding:25px; width:100%; max-width:480px; text-align:center; box-shadow:0 0 25px rgba(255,255,255,0.08); display:none; animation:fadeIn 0.5s ease; }
     .card.active { display:block }
-    input[type=url] { width:100%; padding:12px 15px; border:none; border-radius:var(--radius); font-size:1rem; margin-bottom:15px; background:#111; color:#fff; outline:1px solid #333; transition:.3s; }
+    .input-row { display:flex; gap:8px; align-items:center; margin-bottom:10px; }
+    input[type=url] { flex:1; padding:12px 15px; border:none; border-radius:var(--radius); font-size:1rem; background:#111; color:#fff; outline:1px solid #333; transition:.3s; }
     input[type=url]:focus { outline:1px solid var(--accent); }
+    .clip-btn { display:flex; align-items:center; justify-content:center; min-width:44px; height:44px; padding:6px 10px; border-radius:12px; background:linear-gradient(135deg,#222,#111); color:#fff; border:none; cursor:pointer; font-size:0.9rem; }
+    .clip-btn:hover { background:linear-gradient(135deg,#444,#222); transform:translateY(-1px); }
+    .clip-btn.hidden { display:none; }
     button.download { width:100%; padding:12px; background:linear-gradient(135deg,#333,#111); color:#fff; border:none; border-radius:var(--radius); font-size:1rem; cursor:pointer; transition:0.3s; }
     button.download:hover { background:linear-gradient(135deg,#555,#222); transform:translateY(-2px); }
     .loading { margin:15px 0; font-size:0.95rem; color:#aaa; display:none; }
@@ -65,7 +69,11 @@
   <!-- Instagram -->
   <div class="card" id="card-ig">
     <p style="color:#777;margin-bottom:10px;">Unduh foto & video dari Instagram</p>
-    <input id="ig-url" type="url" placeholder="https://www.instagram.com/p/xxxxx">
+    <div class="input-row">
+      <input id="ig-url" type="url" placeholder="https://www.instagram.com/p/xxxxx">
+      <button id="ig-paste" class="clip-btn">Paste</button>
+      <button id="ig-clear" class="clip-btn hidden">Clear</button>
+    </div>
     <button class="download" onclick="dlIG()">Download</button>
     <div class="loading" id="ig-load">⏳ Mengambil data...</div>
     <div class="result" id="ig-res"></div>
@@ -76,7 +84,11 @@
   <!-- TikTok -->
   <div class="card" id="card-tt">
     <p style="color:#777;margin-bottom:10px;">Unduh video TikTok tanpa watermark</p>
-    <input id="tt-url" type="url" placeholder="https://vt.tiktok.com/xxxxx">
+    <div class="input-row">
+      <input id="tt-url" type="url" placeholder="https://vt.tiktok.com/xxxxx">
+      <button id="tt-paste" class="clip-btn">Paste</button>
+      <button id="tt-clear" class="clip-btn hidden">Clear</button>
+    </div>
     <button class="download" onclick="dlTT()">Download</button>
     <div class="loading" id="tt-load">⏳ Mengambil data...</div>
     <div class="result" id="tt-res">
@@ -93,7 +105,11 @@
   <!-- Spotify -->
   <div class="card" id="card-sp">
     <p style="color:#777;margin-bottom:10px;">Unduh audio dari Spotify</p>
-    <input id="sp-url" type="url" placeholder="https://open.spotify.com/track/...">
+    <div class="input-row">
+      <input id="sp-url" type="url" placeholder="https://open.spotify.com/track/...">
+      <button id="sp-paste" class="clip-btn">Paste</button>
+      <button id="sp-clear" class="clip-btn hidden">Clear</button>
+    </div>
     <button class="download" onclick="dlSP()">Download</button>
     <div class="loading" id="sp-load">⏳ Mengambil data...</div>
     <div class="result" id="sp-res"></div>
@@ -121,18 +137,14 @@
     selectTab('tt'); // default Instagram
 
     // ---------------------
-    // CONFIG: jika kamu punya proxy (express/server) yang jalan,
-    // set proxyBase ke 'http://localhost:3000/proxy' atau domain kamu.
-    // Kalau dikosongin '' maka script akan coba fetch->blob dan fallback ke open-in-new-tab.
-    // (Proxy recommended jika remote server menolak CORS)
+    // CONFIG
     const proxyBase = '/proxy'; // contoh: 'http://localhost:3000/proxy' atau '' to disable
 
-    // Utility: generate 6-digit random number
+    // Utility + existing functions (kept as before)
     function rand6() {
       return Math.floor(100000 + Math.random() * 900000);
     }
 
-    // Utility: try to infer extension from URL or content-type
     function inferExtension(url, contentType) {
       try {
         const u = new URL(url);
@@ -152,7 +164,6 @@
       return 'bin';
     }
 
-    // Build filename: default generic behavior
     function buildFilename(type, resolution, url, contentType) {
       const rnd = rand6();
       const ext = inferExtension(url, contentType);
@@ -170,15 +181,14 @@
       return `TikDownload.live_${rnd}${suffix}.${ext}`;
     }
 
-    // --- New: build Spotify-specific filename: TikDownload.live_Judul - NamaArtis.ext
+    // Spotify filename helper (kept)
     function sanitizeForFilename(s) {
       if (!s) return '';
-      // remove path separators and other illegal chars, collapse whitespace
       return s.toString()
-        .replace(/[/\\?%*:|"<>]/g, '')    // remove illegal FS chars
-        .replace(/\s+/g, ' ')            // collapse multiple spaces
+        .replace(/[/\\?%*:|"<>]/g, '')
+        .replace(/\s+/g, ' ')
         .trim()
-        .substring(0, 120);              // limit length to be safe
+        .substring(0, 120);
     }
 
     function buildSpotifyFilename(title, artists, urlOrDownloadLink, contentType) {
@@ -252,7 +262,6 @@
       return false;
     }
 
-    // ---------- tambahan util untuk multiple images ----------
     function isImageUrl(url) {
       if (!url) return false;
       try {
@@ -270,7 +279,6 @@
       btn.textContent = label || 'Download';
       btn.addEventListener('click', async () => {
         await handleDownload(url, suggestedName);
-        // show Download More for the corresponding card (container)
         const card = btn.closest('.card');
         if (card && card.id === 'card-ig') {
           const igMore = document.getElementById('ig-more');
@@ -315,6 +323,8 @@
         resEl.style.display = 'none';
         document.getElementById('ig-load').style.display = 'none';
         document.getElementById('ig-more').style.display = 'none';
+        // update paste/clear UI
+        updatePasteClearState('ig');
       } else if (tab === 'tt') {
         document.getElementById('tt-url').value = '';
         const resEl = document.getElementById('tt-res');
@@ -328,6 +338,7 @@
         resEl.style.display = 'none';
         document.getElementById('tt-load').style.display = 'none';
         document.getElementById('tt-more').style.display = 'none';
+        updatePasteClearState('tt');
       } else if (tab === 'sp') {
         document.getElementById('sp-url').value = '';
         const resEl = document.getElementById('sp-res');
@@ -335,6 +346,7 @@
         resEl.style.display = 'none';
         document.getElementById('sp-load').style.display = 'none';
         document.getElementById('sp-more').style.display = 'none';
+        updatePasteClearState('sp');
       }
     }
 
@@ -599,7 +611,6 @@
       load.style.display = 'block';
       try {
         const apiEndpoint = `https://api.vreden.my.id/api/v1/download/spotify?url=${encodeURIComponent(url)}`;
-        // use proxy when configured to avoid CORS
         const fetchUrl = proxyBase ? `${proxyBase}?url=${encodeURIComponent(apiEndpoint)}` : apiEndpoint;
 
         const r = await fetch(fetchUrl);
@@ -660,6 +671,74 @@
         alert(e.message || 'Server error');
       } finally {
         load.style.display = 'none';
+      }
+    }
+
+    // ---------------------------
+    // NEW: clipboard / paste / clear logic for each input
+    // ---------------------------
+
+    function attachClipboardHandlers(prefix) {
+      const input = document.getElementById(`${prefix}-url`);
+      const pasteBtn = document.getElementById(`${prefix}-paste`);
+      const clearBtn = document.getElementById(`${prefix}-clear`);
+      if (!input || !pasteBtn || !clearBtn) return;
+
+      function updateButtonStates() {
+        if (input.value.trim()) {
+          pasteBtn.classList.add('hidden');
+          clearBtn.classList.remove('hidden');
+        } else {
+          pasteBtn.classList.remove('hidden');
+          clearBtn.classList.add('hidden');
+        }
+      }
+
+      pasteBtn.addEventListener('click', () => {
+        if (!navigator.clipboard || !navigator.clipboard.readText) {
+          console.error('Clipboard API not available');
+          return;
+        }
+        navigator.clipboard.readText().then(text => {
+          if (text && text.trim()) {
+            input.value = text.trim();
+            updateButtonStates();
+          }
+        }).catch(err => {
+          console.error('Unable to read clipboard content.', err);
+        });
+      });
+
+      clearBtn.addEventListener('click', () => {
+        input.value = '';
+        updateButtonStates();
+      });
+
+      input.addEventListener('input', () => {
+        updateButtonStates();
+      });
+
+      // initial state
+      updateButtonStates();
+    }
+
+    // init clipboard handlers after DOM loaded
+    document.addEventListener('DOMContentLoaded', function () {
+      ['ig','tt','sp'].forEach(attachClipboardHandlers);
+    });
+
+    // helper to update state externally (used by resetCard)
+    function updatePasteClearState(prefix) {
+      const input = document.getElementById(`${prefix}-url`);
+      const pasteBtn = document.getElementById(`${prefix}-paste`);
+      const clearBtn = document.getElementById(`${prefix}-clear`);
+      if (!input || !pasteBtn || !clearBtn) return;
+      if (input.value.trim()) {
+        pasteBtn.classList.add('hidden');
+        clearBtn.classList.remove('hidden');
+      } else {
+        pasteBtn.classList.remove('hidden');
+        clearBtn.classList.add('hidden');
       }
     }
   </script>
