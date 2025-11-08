@@ -59,6 +59,7 @@
   <div class="selector">
     <button id="btnTT" onclick="selectTab('tt')">TikTok</button>
     <button id="btnIG" onclick="selectTab('ig')">Instagram</button>
+    <button id="btnSP" onclick="selectTab('sp')">Spotify</button>
   </div>
 
   <!-- Instagram -->
@@ -89,16 +90,28 @@
     <button class="dlbtn" id="tt-more" style="display:none;margin-top:12px;" onclick="resetCard('tt')">Download More</button>
   </div>
 
+  <!-- Spotify -->
+  <div class="card" id="card-sp">
+    <p style="color:#777;margin-bottom:10px;">Unduh audio dari Spotify</p>
+    <input id="sp-url" type="url" placeholder="https://open.spotify.com/track/xxxxx">
+    <button class="download" onclick="dlSP()">Download</button>
+    <div class="loading" id="sp-load">⏳ Mengambil data...</div>
+    <div class="result" id="sp-res"></div>
+    <!-- DOWNLOAD MORE (SP) -->
+    <button class="dlbtn" id="sp-more" style="display:none;margin-top:12px;" onclick="resetCard('sp')">Download More</button>
+  </div>
+
   <footer>© 2025 TikDownload</footer>
 
   <script>
     const buttons = {
       ig: document.getElementById('btnIG'),
-      tt: document.getElementById('btnTT')
+      tt: document.getElementById('btnTT'),
+      sp: document.getElementById('btnSP')
     };
 
     function selectTab(tab) {
-      ['ig','tt'].forEach(x => {
+      ['ig','tt','sp'].forEach(x => {
         document.getElementById('card-'+x).classList.remove('active');
         buttons[x].classList.remove('active');
       });
@@ -246,6 +259,9 @@
         } else if (card && card.id === 'card-tt') {
           const ttMore = document.getElementById('tt-more');
           if (ttMore) ttMore.style.display = 'block';
+        } else if (card && card.id === 'card-sp') {
+          const spMore = document.getElementById('sp-more');
+          if (spMore) spMore.style.display = 'block';
         }
       });
       return btn;
@@ -293,6 +309,13 @@
         resEl.style.display = 'none';
         document.getElementById('tt-load').style.display = 'none';
         document.getElementById('tt-more').style.display = 'none';
+      } else if (tab === 'sp') {
+        document.getElementById('sp-url').value = '';
+        const resEl = document.getElementById('sp-res');
+        resEl.innerHTML = '';
+        resEl.style.display = 'none';
+        document.getElementById('sp-load').style.display = 'none';
+        document.getElementById('sp-more').style.display = 'none';
       }
     }
 
@@ -520,6 +543,103 @@
 
         result.style.display = 'block';
       } catch(e) {
+        console.error(e);
+        alert(e.message || 'Server error');
+      } finally {
+        load.style.display = 'none';
+      }
+    }
+
+    // --- Spotify downloader (baru) ---
+    async function dlSP() {
+      const url = document.getElementById('sp-url').value.trim();
+      const load = document.getElementById('sp-load');
+      const resEl = document.getElementById('sp-res');
+
+      if (!url) return alert('Masukkan link Spotify!');
+      resEl.innerHTML = '';
+      load.style.display = 'block';
+
+      try {
+        const api = `https://api.vreden.my.id/api/v1/download/spotify?url=${encodeURIComponent(url)}`;
+        const res = await fetch(api);
+        const json = await res.json();
+        if (!json || (!json.status && !json.result)) throw new Error('Tidak ada data dari Spotify API');
+
+        // Normalize result: look for likely fields containing downloadable URLs
+        // Possible fields: result.url, result.download, result.mp3, result.data, or array of files
+        const entries = [];
+        const pushIfUrl = (u, info = {}) => { if (u && typeof u === 'string') entries.push(Object.assign({url: u}, info)); };
+
+        // If API returns array
+        if (Array.isArray(json.result)) {
+          json.result.forEach(item => {
+            if (typeof item === 'string') pushIfUrl(item);
+            else if (item && typeof item === 'object') {
+              pushIfUrl(item.url || item.download || item.mp3 || item.audio, { title: item.title || item.name || '' , thumbnail: item.thumb || item.thumbnail || '' , contentType: item.mime || ''});
+            }
+          });
+        } else if (json.result && typeof json.result === 'object') {
+          const r = json.result;
+          // try multiple known keys
+          pushIfUrl(r.url || r.download || r.mp3 || r.audio || r.file, { title: r.title || r.name || '', thumbnail: r.thumbnail || r.thumb || r.cover || '' , contentType: r.mime || '' });
+          // if result has files array
+          if (Array.isArray(r.files)) {
+            r.files.forEach(f => {
+              if (typeof f === 'string') pushIfUrl(f);
+              else if (f && typeof f === 'object') pushIfUrl(f.url || f.download || f.mp3 || f.audio, { title: f.title || f.name || '', thumbnail: f.thumbnail || f.thumb || '' , contentType: f.mime || ''});
+            });
+          }
+        } else if (typeof json === 'object') {
+          // fallback try top-level fields
+          pushIfUrl(json.url || json.download || json.mp3 || json.audio, { title: json.title || '' , thumbnail: json.thumbnail || '' , contentType: json.mime || ''});
+        }
+
+        // Deduplicate and filter
+        const seen = new Set();
+        const final = entries.map(e => ({ url: e.url, title: e.title || '', thumbnail: e.thumbnail || '', contentType: e.contentType || '' }))
+          .filter(e => e.url && !seen.has(e.url) && (seen.add(e.url), true));
+
+        if (!final.length) throw new Error('Tidak menemukan file untuk didownload dari response Spotify');
+
+        // Render results
+        resEl.innerHTML = '';
+        final.forEach((item, idx) => {
+          const container = document.createElement('div');
+          container.style.marginBottom = '15px';
+          container.style.textAlign = 'left';
+
+          if (item.thumbnail) {
+            const img = document.createElement('img');
+            img.src = item.thumbnail;
+            img.style.width = '100%';
+            img.style.borderRadius = '10px';
+            img.style.marginBottom = '6px';
+            container.appendChild(img);
+          }
+
+          if (item.title) {
+            const lbl = document.createElement('div');
+            lbl.style.color = '#ddd';
+            lbl.style.fontSize = '0.95rem';
+            lbl.style.marginBottom = '6px';
+            lbl.textContent = item.title;
+            container.appendChild(lbl);
+          }
+
+          const suggested = buildFilename('mp3','', item.url, item.contentType || '');
+          const btn = makeDownloadButton(item.url, 'Download', suggested);
+          container.appendChild(btn);
+
+          resEl.appendChild(container);
+        });
+
+        // show Download More for Spotify immediately (and also after download via makeDownloadButton)
+        const spMore = document.getElementById('sp-more');
+        if (spMore) spMore.style.display = 'block';
+
+        resEl.style.display = 'block';
+      } catch (e) {
         console.error(e);
         alert(e.message || 'Server error');
       } finally {
