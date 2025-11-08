@@ -152,7 +152,7 @@
       return 'bin';
     }
 
-    // Build filename: Cecilefy.xyz_6digits + suffix + .ext
+    // Build filename: default generic behavior
     function buildFilename(type, resolution, url, contentType) {
       const rnd = rand6();
       const ext = inferExtension(url, contentType);
@@ -168,6 +168,25 @@
         }
       }
       return `TikDownload.live_${rnd}${suffix}.${ext}`;
+    }
+
+    // --- New: build Spotify-specific filename: TikDownload.live_Judul - NamaArtis.ext
+    function sanitizeForFilename(s) {
+      if (!s) return '';
+      // remove path separators and other illegal chars, collapse whitespace
+      return s.toString()
+        .replace(/[/\\?%*:|"<>]/g, '')    // remove illegal FS chars
+        .replace(/\s+/g, ' ')            // collapse multiple spaces
+        .trim()
+        .substring(0, 120);              // limit length to be safe
+    }
+
+    function buildSpotifyFilename(title, artists, urlOrDownloadLink, contentType) {
+      const t = sanitizeForFilename(title || 'Unknown');
+      const a = sanitizeForFilename(artists || 'Unknown');
+      const ext = inferExtension(urlOrDownloadLink || '', contentType || 'audio/mpeg');
+      const base = `TikDownload.live_${t}${a ? ' - ' + a : ''}`;
+      return `${base}.${ext}`;
     }
 
     function downloadViaProxy(fileUrl, suggestedFilename) {
@@ -616,7 +635,8 @@
 
         // download button (mp3 link)
         if (res.download) {
-          const suggested = buildFilename('mp3', '', res.download);
+          // build Spotify-specific suggested filename: TikDownload.live_Judul - NamaArtis.ext
+          const suggested = buildSpotifyFilename(res.title, res.artists, res.download);
           const btn = makeDownloadButton(res.download, 'Download', suggested);
           container.appendChild(btn);
         } else {
