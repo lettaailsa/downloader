@@ -92,7 +92,17 @@ app.get('/proxy', async (req, res) => {
 
   try {
     const upstream = await fetch(url);
-    if (!upstream.ok) return res.status(502).send(`Upstream returned ${upstream.status}`);
+    if (!upstream.ok) {
+      try {
+        const body = await upstream.text().catch(() => '');
+        const ct = upstream.headers.get('content-type');
+        if (ct) res.setHeader('Content-Type', ct);
+        return res.status(upstream.status).send(body || `Upstream returned ${upstream.status}`);
+      } catch (err) {
+        console.error('Error forwarding upstream error body', err);
+        return res.status(502).send(`Upstream returned ${upstream.status}`);
+      }
+    }
 
     const upstreamCD = upstream.headers.get('content-disposition');
     let ext =
@@ -254,3 +264,4 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Proxy + frontend running at http://localhost:${PORT}/proxy`);
 });
+
