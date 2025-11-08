@@ -118,7 +118,7 @@
       document.getElementById('card-'+tab).classList.add('active');
       buttons[tab].classList.add('active');
     }
-    selectTab('tt'); // default
+    selectTab('tt'); // default Instagram
 
     // ---------------------
     // CONFIG: jika kamu punya proxy (express/server) yang jalan,
@@ -152,7 +152,7 @@
       return 'bin';
     }
 
-    // Build filename
+    // Build filename: Cecilefy.xyz_6digits + suffix + .ext
     function buildFilename(type, resolution, url, contentType) {
       const rnd = rand6();
       const ext = inferExtension(url, contentType);
@@ -233,7 +233,7 @@
       return false;
     }
 
-    // helper
+    // ---------- tambahan util untuk multiple images ----------
     function isImageUrl(url) {
       if (!url) return false;
       try {
@@ -244,13 +244,14 @@
       return /(^data:image\/)|image\//i.test(url);
     }
 
-    // Make download button — shows Download More for card after download
+    // Make download button — after download completes, show Download More for the card
     function makeDownloadButton(url, label, suggestedName) {
       const btn = document.createElement('button');
       btn.className = 'dlbtn';
       btn.textContent = label || 'Download';
       btn.addEventListener('click', async () => {
         await handleDownload(url, suggestedName);
+        // show Download More for the corresponding card (container)
         const card = btn.closest('.card');
         if (card && card.id === 'card-ig') {
           const igMore = document.getElementById('ig-more');
@@ -349,12 +350,14 @@
             const contentType = entry.contentType || '';
             const typeGuess = isImageUrl(candidateUrl) ? 'image' : 'media';
             const resolution = (/hd/i.test(candidateUrl) || /hd/i.test(entry.title || '')) ? 'hd' : '';
+            const caption = entry.title || entry.caption || '';
             items.push({
               url: candidateUrl,
               thumbnail: thumb,
               contentType,
               type: typeGuess,
-              resolution
+              resolution,
+              caption
             });
           }
         });
@@ -384,7 +387,8 @@
           lbl.style.color = '#ddd';
           lbl.style.fontSize = '0.9rem';
           lbl.style.marginBottom = '6px';
-          // intentionally empty per request (no extra text)
+          // show caption from instagram if available (empty if none)
+          lbl.textContent = item.caption || '';
           container.appendChild(lbl);
 
           // ===== DETEKSI IMAGE / VIDEO =====
@@ -521,14 +525,30 @@
         if (Array.isArray(json.result.images) && json.result.images.length) {
           result.innerHTML = '';
           const max = 100;
+          // caption for slideshow (use title/caption from API if present)
+          const slideCaption = (json.result.title || json.result.caption || '').toString();
           json.result.images.slice(0, max).forEach((imgUrl, idx) => {
             const div = document.createElement('div');
             div.style.marginBottom = '12px';
+
             const im = document.createElement('img');
             im.src = imgUrl;
             im.style.width = '100%';
             im.style.borderRadius = '10px';
             div.appendChild(im);
+
+            // caption from TikTok (if any)
+            if (slideCaption) {
+              const capEl = document.createElement('div');
+              capEl.style.color = '#ddd';
+              capEl.style.fontSize = '0.95rem';
+              capEl.style.marginTop = '6px';
+              capEl.style.marginBottom = '6px';
+              capEl.style.textAlign = 'center';
+              capEl.textContent = slideCaption;
+              div.appendChild(capEl);
+            }
+
             const suggested = buildFilename('tt', '', imgUrl);
             const btn = makeDownloadButton(imgUrl, `Download`, suggested);
             div.appendChild(btn);
@@ -549,7 +569,7 @@
       }
     }
 
-    // --- Spotify downloader (NEW) ---
+    // --- Spotify downloader ---
     async function dlSP() {
       const url = document.getElementById('sp-url').value.trim();
       const load = document.getElementById('sp-load');
@@ -558,24 +578,21 @@
       if (!url) return alert('Masukkan link Spotify!');
       resEl.innerHTML = '';
       load.style.display = 'block';
-
       try {
-        const apiRaw = `https://api.vreden.my.id/api/v1/download/spotify?url=${encodeURIComponent(url)}`;
+        const apiEndpoint = `https://api.vreden.my.id/api/v1/download/spotify?url=${encodeURIComponent(url)}`;
+        // use proxy when configured to avoid CORS
+        const fetchUrl = proxyBase ? `${proxyBase}?url=${encodeURIComponent(apiEndpoint)}` : apiEndpoint;
 
-        // Use proxyBase to fetch API if available (avoids CORS). If proxyBase empty, call API directly.
-        const fetchUrl = proxyBase ? `${proxyBase}?url=${encodeURIComponent(apiRaw)}` : apiRaw;
         const r = await fetch(fetchUrl);
-        if (!r.ok) throw new Error('Gagal mengambil data Spotify: ' + r.status);
         const json = await r.json();
-        if (!json || !json.status || !json.result) throw new Error('Tidak ada data dari Spotify');
+        if (!json || !json.status || !json.result) throw new Error('Tidak ada data Spotify');
 
-        // Expected fields from sample:
-        // result: { id, title, artists, album, cover_url, duration_ms, release_date, download }
-        const res = json.result;
+        const res = json.result; // { id, title, artists, album, cover_url, duration_ms, download, ... }
 
-        // Build UI: cover, title/artist, download button
+        // build UI: cover, centered bold title — artist, download button
         const container = document.createElement('div');
         container.style.textAlign = 'left';
+        container.style.marginBottom = '12px';
 
         if (res.cover_url) {
           const img = document.createElement('img');
@@ -586,22 +603,34 @@
           container.appendChild(img);
         }
 
-        // Title & artist (ke-2 baris, kept minimal)
+        // meta: center + bold + style like TikTok
         const meta = document.createElement('div');
-        meta.style.color = '#ddd';
-        meta.style.fontSize = '0.95rem';
-        meta.style.marginBottom = '8px';
+        meta.style.color = '#fff';
+        meta.style.fontWeight = 'bold';
+        meta.style.textAlign = 'center';
+        meta.style.fontSize = '1.05rem';
+        meta.style.marginTop = '10px';
+        meta.style.marginBottom = '12px';
         meta.textContent = (res.title ? res.title : '') + (res.artists ? (res.title ? ' — ' : '') + res.artists : '');
         if (meta.textContent) container.appendChild(meta);
 
-        // suggested filename and download button
-        const suggested = buildFilename('mp3', '', res.download || url, '');
-        const dlBtn = makeDownloadButton(res.download || res.url || url, 'Download', suggested);
-        container.appendChild(dlBtn);
+        // download button (mp3 link)
+        if (res.download) {
+          const suggested = buildFilename('mp3', '', res.download);
+          const btn = makeDownloadButton(res.download, 'Download', suggested);
+          container.appendChild(btn);
+        } else {
+          const info = document.createElement('div');
+          info.style.color = '#ddd';
+          info.style.fontSize = '0.95rem';
+          info.style.textAlign = 'center';
+          info.textContent = 'Link download tidak tersedia';
+          container.appendChild(info);
+        }
 
         resEl.appendChild(container);
 
-        // show Download More immediately (user asked it appears before download too)
+        // show Download More immediately
         const spMore = document.getElementById('sp-more');
         if (spMore) spMore.style.display = 'block';
 
@@ -613,7 +642,6 @@
         load.style.display = 'none';
       }
     }
-
   </script>
 </body>
 </html>
