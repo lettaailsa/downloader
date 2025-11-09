@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>TikDownload</title>
@@ -13,47 +13,278 @@
       --accent2: #fff;
       --radius: 12px;
     }
-    * { box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Roboto,Arial,sans-serif }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+    }
+
     body {
-      background:var(--bg);
-      color:#fff;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      min-height:100vh;
-      padding:20px;
+      background: var(--bg);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
     }
+
     h1 {
-      font-size:2rem;
-      font-weight:700;
-      letter-spacing:1px;
-      margin-bottom:25px;
-      color:var(--accent2);
-      text-transform:uppercase;
-      text-align:center;
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 25px;
+      color: var(--accent2);
+      text-transform: uppercase;
+      text-align: center;
     }
-    .selector { display:flex; gap:10px; justify-content:center; margin-bottom:25px; flex-wrap:wrap; }
-    .selector button { padding:12px 20px; border:none; border-radius:var(--radius); background:linear-gradient(135deg,#222,#111); color:#fff; font-size:1rem; cursor:pointer; transition:.3s; }
-    .selector button:hover { background:linear-gradient(135deg,#444,#222); transform:translateY(-2px); }
-    .selector button.active { background:linear-gradient(135deg,#555,#333); box-shadow:0 0 10px rgba(255,255,255,0.2) }
-    .card { background:var(--card); border-radius:var(--radius); padding:25px; width:100%; max-width:480px; text-align:center; box-shadow:0 0 25px rgba(255,255,255,0.08); display:none; animation:fadeIn 0.5s ease; }
-    .card.active { display:block }
-    .input-row { display:flex; gap:8px; align-items:center; margin-bottom:10px; }
-    input[type=url] { flex:1; padding:12px 15px; border:none; border-radius:var(--radius); font-size:1rem; background:#111; color:#fff; outline:1px solid #333; transition:.3s; }
-    input[type=url]:focus { outline:1px solid var(--accent); }
-    .clip-btn { display:flex; align-items:center; justify-content:center; min-width:44px; height:44px; padding:6px 10px; border-radius:12px; background:linear-gradient(135deg,#222,#111); color:#fff; border:none; cursor:pointer; font-size:0.9rem; }
-    .clip-btn:hover { background:linear-gradient(135deg,#444,#222); transform:translateY(-1px); }
-    .clip-btn.hidden { display:none; }
-    button.download { width:100%; padding:12px; background:linear-gradient(135deg,#333,#111); color:#fff; border:none; border-radius:var(--radius); font-size:1rem; cursor:pointer; transition:0.3s; }
-    button.download:hover { background:linear-gradient(135deg,#555,#222); transform:translateY(-2px); }
-    .loading { margin:15px 0; font-size:0.95rem; color:#aaa; display:none; }
-    .result { display:none; margin-top:20px; background:#111; border-radius:var(--radius); padding:15px; box-shadow:inset 0 0 10px rgba(255,255,255,0.05); animation:fadeIn 0.5s ease; }
-    .result img { width:100%; border-radius:var(--radius); margin-bottom:10px; }
-    .dlbtn { display:block; margin:8px 0; padding:10px; background:#222; border-radius:var(--radius); text-align:center; color:#fff; cursor:pointer; text-decoration:none; border:none; width:100%; }
-    .dlbtn:hover { background:#333; }
-    footer { margin-top:30px; font-size:0.8rem; color:#777; text-align:center; }
-    @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+    .selector {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+
+    .selector button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: var(--radius);
+      background: linear-gradient(135deg,#222,#111);
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: .3s;
+    }
+
+    .selector button:hover {
+      background: linear-gradient(135deg,#444,#222);
+      transform: translateY(-2px);
+    }
+
+    .selector button.active {
+      background: linear-gradient(135deg,#555,#333);
+      box-shadow: 0 0 10px rgba(255,255,255,0.2);
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 25px;
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+      box-shadow: 0 0 25px rgba(255,255,255,0.08);
+      display: none;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .card.active { display: block; }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    input[type=url] {
+      flex: 1;
+      padding: 12px 15px;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      background: #111;
+      color: #fff;
+      outline: 1px solid #333;
+      transition: .3s;
+    }
+
+    input[type=url]:focus { outline: 1px solid var(--accent); }
+
+    .clip-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      height: 44px;
+      padding: 6px 10px;
+      border-radius: 12px;
+      background: linear-gradient(135deg,#222,#111);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .clip-btn:hover { 
+      background: linear-gradient(135deg,#444,#222); 
+      transform: translateY(-1px); 
+    }
+
+    .clip-btn.hidden { 
+      display: none; 
+    }
+
+    button.download {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg,#333,#111);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button.download:hover { 
+      background: linear-gradient(135deg,#555,#222); 
+      transform: translateY(-2px); 
+    }
+
+    .loading { 
+      margin: 15px 0; 
+      font-size: 0.95rem; 
+      color: #aaa; 
+      display: none; 
+    }
+
+    .result {
+      display: none;
+      margin-top: 20px;
+      background: #111;
+      border-radius: var(--radius);
+      padding: 15px;
+      box-shadow: inset 0 0 10px rgba(255,255,255,0.05);
+      animation: fadeIn 0.5s ease;
+    }
+
+    .result img { 
+      width: 100%; 
+      border-radius: var(--radius); 
+      margin-bottom: 10px; 
+    }
+
+    .dlbtn {
+      display: block;
+      margin: 8px 0;
+      padding: 10px;
+      background: #222;
+      border-radius: var(--radius);
+      text-align: center;
+      color: #fff;
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+      width: 100%;
+    }
+
+    .dlbtn:hover { 
+      background: #333; 
+    }
+
+    footer { 
+      margin-top: 30px; 
+      font-size: 0.8rem; 
+      color: #777; 
+      text-align: center; 
+    }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Modal styles */
+    .pd-modal-overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+      background: rgba(0,0,0,0.45);
+    }
+
+    .pd-modal {
+      width: 100%;
+      max-width: 520px;
+      min-height: 320px;
+      background: var(--card);
+      border-radius: 8px;
+      padding: 36px 34px;
+      text-align: center;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pd-modal .pd-icon {
+      width: 86px;
+      height: 86px;
+      margin: 4px auto 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 5px solid rgba(47,183,238,0.12);
+      background: transparent;
+    }
+
+    .pd-modal .pd-icon::after {
+      content: "!";
+      font-weight: 700;
+      font-size: 46px;
+      color: #2fb7ee;
+      font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+    }
+
+    .pd-modal h3 { 
+      margin: 6px 0 12px; 
+      font-size: 26px; 
+      color: #e6e6e6; 
+      font-weight: 700; 
+    }
+    
+    .pd-modal p { 
+      margin: 0 0 18px; 
+      color: #bfbfbf; 
+      font-size: 15px; 
+      line-height: 1.5; 
+      max-width: 84%; 
+      margin-left: auto; 
+      margin-right: auto; 
+      white-space: pre-wrap; 
+    }
+
+    .pd-modal .pd-ok {
+      display: inline-block;
+      padding: 10px 26px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 15px;
+      background: linear-gradient(180deg,#4ea3ff,#3a7fe6);
+      color: #fff;
+      border: 2px solid rgba(255,255,255,0.08);
+      box-shadow: 0 6px 0 rgba(0,0,0,0.16);
+      cursor: pointer;
+    }
+
+    .pd-modal .pd-ok:active { 
+      transform: translateY(2px); 
+      box-shadow: 0 3px 0 rgba(0,0,0,0.2); 
+    }
+
+    @media (max-width:520px) {
+      .pd-modal { padding: 20px; }
+      .pd-modal h3 { font-size: 20px; }
+      .pd-modal .pd-icon { width: 66px; height: 66px; border-width: 4px; }
+    }
   </style>
 </head>
 <body>
@@ -68,14 +299,14 @@
 
   <!-- Instagram -->
   <div class="card" id="card-ig">
-    <p style="color:#777;margin-bottom:10px;">Unduh foto & video dari Instagram</p>
+    <p style="color:#777;margin-bottom:10px;">Download photos & videos from Instagram</p>
     <div class="input-row">
       <input id="ig-url" type="url" placeholder="https://www.instagram.com/p/xxxxx">
       <button id="ig-paste" class="clip-btn">Paste</button>
       <button id="ig-clear" class="clip-btn hidden">Clear</button>
     </div>
     <button class="download" onclick="dlIG()">Download</button>
-    <div class="loading" id="ig-load">⏳ Mengambil data...</div>
+    <div class="loading" id="ig-load">⏳ Fetching data...</div>
     <div class="result" id="ig-res"></div>
     <!-- DOWNLOAD MORE (IG) -->
     <button class="dlbtn" id="ig-more" style="display:none;margin-top:12px;" onclick="resetCard('ig')">Download More</button>
@@ -83,14 +314,14 @@
 
   <!-- TikTok -->
   <div class="card" id="card-tt">
-    <p style="color:#777;margin-bottom:10px;">Unduh video TikTok tanpa watermark</p>
+    <p style="color:#777;margin-bottom:10px;">Download TikTok videos without watermark</p>
     <div class="input-row">
       <input id="tt-url" type="url" placeholder="https://vt.tiktok.com/xxxxx">
       <button id="tt-paste" class="clip-btn">Paste</button>
       <button id="tt-clear" class="clip-btn hidden">Clear</button>
     </div>
     <button class="download" onclick="dlTT()">Download</button>
-    <div class="loading" id="tt-load">⏳ Mengambil data...</div>
+    <div class="loading" id="tt-load">⏳ Fetching data...</div>
     <div class="result" id="tt-res">
       <img id="tt-thumb" alt="Thumbnail">
       <h4 id="tt-title"></h4>
@@ -104,20 +335,32 @@
 
   <!-- Spotify -->
   <div class="card" id="card-sp">
-    <p style="color:#777;margin-bottom:10px;">Unduh audio dari Spotify</p>
+    <p style="color:#777;margin-bottom:10px;">Download audio from Spotify</p>
     <div class="input-row">
       <input id="sp-url" type="url" placeholder="https://open.spotify.com/track/...">
       <button id="sp-paste" class="clip-btn">Paste</button>
       <button id="sp-clear" class="clip-btn hidden">Clear</button>
     </div>
     <button class="download" onclick="dlSP()">Download</button>
-    <div class="loading" id="sp-load">⏳ Mengambil data...</div>
+    <div class="loading" id="sp-load">⏳ Fetching data...</div>
     <div class="result" id="sp-res"></div>
     <!-- DOWNLOAD MORE (SP) -->
     <button class="dlbtn" id="sp-more" style="display:none;margin-top:12px;" onclick="resetCard('sp')">Download More</button>
   </div>
 
   <footer>© 2025 TikDownload</footer>
+
+  <!-- Modal for replacing alert() -->
+  <div id="pdModalOverlay" class="pd-modal-overlay" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="pd-modal" role="document" aria-labelledby="pdModalTitle" aria-describedby="pdModalDesc">
+      <div class="pd-icon" aria-hidden="true"></div>
+      <h3 id="pdModalTitle">Notice</h3>
+      <p id="pdModalDesc">Message...</p>
+      <div style="margin-top:18px;">
+        <button id="pdModalOk" class="pd-ok" type="button">OK</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     const buttons = {
@@ -128,19 +371,18 @@
 
     function selectTab(tab) {
       ['ig','tt','sp'].forEach(x => {
-        document.getElementById('card-'+x).classList.remove('active');
+        document.getElementById('card-' + x).classList.remove('active');
         buttons[x].classList.remove('active');
       });
-      document.getElementById('card-'+tab).classList.add('active');
+      document.getElementById('card-' + tab).classList.add('active');
       buttons[tab].classList.add('active');
     }
-    selectTab('tt'); // default Instagram
 
-    // ---------------------
+    selectTab('tt'); // default tab
+
     // CONFIG
-    const proxyBase = '/proxy'; // contoh: 'http://localhost:3000/proxy' atau '' to disable
+    const proxyBase = 'https://www.tikdownload.live/proxy';
 
-    // Utility + existing functions (kept as before)
     function rand6() {
       return Math.floor(100000 + Math.random() * 900000);
     }
@@ -151,7 +393,8 @@
         const path = u.pathname;
         const match = path.match(/\.([a-z0-9]{2,5})(?:$|\?)/i);
         if (match) return match[1].toLowerCase();
-      } catch(e){}
+      } catch (e) {}
+
       if (contentType) {
         const ct = contentType.toLowerCase();
         if (ct.includes('mp4')) return 'mp4';
@@ -161,6 +404,7 @@
         if (ct.includes('jpeg') || ct.includes('jpg')) return 'jpg';
         if (ct.includes('gif')) return 'gif';
       }
+
       return 'bin';
     }
 
@@ -168,27 +412,20 @@
       const rnd = rand6();
       const ext = inferExtension(url, contentType);
       let suffix = '';
-      if (type?.toLowerCase() === 'mp3') {
-        suffix = '';
-      } else if (resolution && resolution.trim() !== '') {
+
+      if (type?.toLowerCase() === 'mp3') { suffix = ''; }
+      else if (resolution && resolution.trim() !== '') {
         const r = resolution.trim().toLowerCase();
-        if (r === 'hd' || r === 'sd') {
-          suffix = `-${r.toUpperCase()}`;
-        } else {
-          suffix = `-${r}`;
-        }
+        if (r === 'hd' || r === 'sd') suffix = `-${r.toUpperCase()}`;
+        else suffix = `-${r}`;
       }
+
       return `TikDownload.live_${rnd}${suffix}.${ext}`;
     }
 
-    // Spotify filename helper (kept)
     function sanitizeForFilename(s) {
       if (!s) return '';
-      return s.toString()
-        .replace(/[/\\?%*:|"<>]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .substring(0, 120);
+      return s.toString().replace(/[/\\?%*:|"<>]/g, '').replace(/\s+/g, ' ').trim().substring(0, 120);
     }
 
     function buildSpotifyFilename(title, artists, urlOrDownloadLink, contentType) {
@@ -200,9 +437,7 @@
     }
 
     function downloadViaProxy(fileUrl, suggestedFilename) {
-      if (!proxyBase) {
-        return false;
-      }
+      if (!proxyBase) return false;
       try {
         const params = new URLSearchParams({ url: fileUrl, filename: suggestedFilename });
         const proxyUrl = `${proxyBase}?${params.toString()}`;
@@ -244,9 +479,9 @@
     function fallbackOpen(fileUrl) {
       try {
         window.open(fileUrl, '_blank');
-        alert('Tidak bisa mendownload langsung (CORS). Halaman file dibuka di tab baru — simpan manual. Untuk nama file sesuai template, jalankan proxy dan set proxyBase.');
+        showModal('Notice', 'Unable to download directly due to CORS. The file has been opened in a new tab — please save it manually.');
       } catch (e) {
-        alert('Gagal membuka file langsung. ' + (e && e.message ? e.message : ''));
+        showModal('Error', 'Failed to open the file. ' + (e && e.message ? e.message : ''));
       }
     }
 
@@ -268,11 +503,10 @@
         const path = (new URL(url)).pathname;
         const m = path.match(/\.([a-z0-9]{2,5})$/i);
         if (m && ['jpg','jpeg','png','webp','gif','bmp','heic','heif'].includes(m[1].toLowerCase())) return true;
-      } catch(e){}
+      } catch (e) {}
       return /(^data:image\/)|image\//i.test(url);
     }
 
-    // Make download button — after download completes, show Download More for the card
     function makeDownloadButton(url, label, suggestedName) {
       const btn = document.createElement('button');
       btn.className = 'dlbtn';
@@ -280,41 +514,29 @@
       btn.addEventListener('click', async () => {
         await handleDownload(url, suggestedName);
         const card = btn.closest('.card');
-        if (card && card.id === 'card-ig') {
-          const igMore = document.getElementById('ig-more');
-          if (igMore) igMore.style.display = 'block';
-        } else if (card && card.id === 'card-tt') {
-          const ttMore = document.getElementById('tt-more');
-          if (ttMore) ttMore.style.display = 'block';
-        } else if (card && card.id === 'card-sp') {
-          const spMore = document.getElementById('sp-more');
-          if (spMore) spMore.style.display = 'block';
-        }
+        if (card && card.id === 'card-ig') { const igMore = document.getElementById('ig-more'); if (igMore) igMore.style.display = 'block'; }
+        else if (card && card.id === 'card-tt') { const ttMore = document.getElementById('tt-more'); if (ttMore) ttMore.style.display = 'block'; }
+        else if (card && card.id === 'card-sp') { const spMore = document.getElementById('sp-more'); if (spMore) spMore.style.display = 'block'; }
       });
       return btn;
     }
 
     async function batchDownload(items) {
-      if (!items || !items.length) return alert('Tidak ada file untuk didownload.');
-      const proceed = confirm(`Mulai mendownload ${items.length} file satu per satu? Pastikan proxy aktif jika perlu.`);
+      if (!items || !items.length) return showModal('Notice', 'No files available for download.');
+      const proceed = confirm(`Start downloading ${items.length} files one by one? Ensure the proxy is active if required.`);
       if (!proceed) return;
       for (let i = 0; i < items.length; i++) {
         const it = items[i];
         try {
           const suggested = buildFilename(it.type || 'ig', it.resolution || '', it.url, it.contentType || '');
           const ok = await fetchAndSave(it.url, suggested);
-          if (!ok) {
-            await handleDownload(it.url, suggested);
-          }
+          if (!ok) { await handleDownload(it.url, suggested); }
           await new Promise(r => setTimeout(r, 400));
-        } catch (e) {
-          console.error('batchDownload item error', e);
-        }
+        } catch (e) { console.error('batchDownload item error', e); }
       }
-      alert('Proses batch download selesai.');
+      showModal('Notice', 'Batch download completed.');
     }
 
-    // Reset card to initial (without reload)
     function resetCard(tab) {
       if (tab === 'ig') {
         document.getElementById('ig-url').value = '';
@@ -323,7 +545,6 @@
         resEl.style.display = 'none';
         document.getElementById('ig-load').style.display = 'none';
         document.getElementById('ig-more').style.display = 'none';
-        // update paste/clear UI
         updatePasteClearState('ig');
       } else if (tab === 'tt') {
         document.getElementById('tt-url').value = '';
@@ -350,60 +571,39 @@
       }
     }
 
-    // --- Instagram downloader ---
+    // Instagram
     async function dlIG() {
       const url = document.getElementById('ig-url').value.trim();
       const load = document.getElementById('ig-load');
       const resEl = document.getElementById('ig-res');
-      const maxInput = document.getElementById('ig-max');
-      const downloadAllBtn = document.getElementById('ig-download-all');
-
-      if (!url) return alert('Masukkan link Instagram!');
+      if (!url) return showModal('Notice', 'Please provide an Instagram link.');
       resEl.innerHTML = '';
       load.style.display = 'block';
-      if (downloadAllBtn) downloadAllBtn.style.display = 'none';
       try {
         const api = `https://api.nvidiabotz.xyz/download/instagram?url=${encodeURIComponent(url)}`;
         const res = await fetch(api);
         const json = await res.json();
-        if (!json.status || !json.result?.length) throw new Error('Tidak ada media ditemukan');
-
-        // flatten/normalize items
+        if (!json.status || !json.result?.length) throw new Error('No media found');
         const items = [];
         json.result.forEach(entry => {
-          if (Array.isArray(entry.media)) {
-            entry.media.forEach(m => items.push(m));
-          } else if (Array.isArray(entry.files)) {
-            entry.files.forEach(m => items.push(m));
-          } else {
+          if (Array.isArray(entry.media)) entry.media.forEach(m => items.push(m));
+          else if (Array.isArray(entry.files)) entry.files.forEach(m => items.push(m));
+          else {
             const candidateUrl = entry.url_download || entry.url || entry.file || entry.src || entry.video || null;
             const thumb = entry.thumbnail || entry.preview || entry.thumb || null;
             const contentType = entry.contentType || '';
-            const typeGuess = isImageUrl(candidateUrl) ? 'image' : 'media';
-            const resolution = (/hd/i.test(candidateUrl) || /hd/i.test(entry.title || '')) ? 'hd' : '';
             const caption = entry.title || entry.caption || '';
-            items.push({
-              url: candidateUrl,
-              thumbnail: thumb,
-              contentType,
-              type: typeGuess,
-              resolution,
-              caption
-            });
+            items.push({ url: candidateUrl, thumbnail: thumb, contentType, caption });
           }
         });
 
-        const max = Math.max(1, Math.min(100, Number(maxInput?.value || 10)));
-        const limited = items.filter(it => it.url).slice(0, max);
-
+        const limited = items.filter(it => it.url).slice(0, 50);
         resEl.innerHTML = '';
-        const batchForDownload = [];
 
-        limited.forEach((item, idx) => {
+        limited.forEach(item => {
           const container = document.createElement('div');
           container.style.marginBottom = '15px';
           container.style.textAlign = 'left';
-
           const thumbUrl = item.thumbnail || (isImageUrl(item.url) ? item.url : '');
           if (thumbUrl) {
             const img = document.createElement('img');
@@ -418,157 +618,75 @@
           lbl.style.color = '#ddd';
           lbl.style.fontSize = '0.9rem';
           lbl.style.marginBottom = '6px';
-          // show caption from instagram if available (empty if none)
           lbl.textContent = item.caption || '';
           container.appendChild(lbl);
 
-          // ===== DETEKSI IMAGE / VIDEO =====
-          const urlStr = (item.url || '').toString();
-          const ct = (item.contentType || '').toString().toLowerCase();
-          const typeField = (item.type || '').toString().toLowerCase();
-
-          const looksLikeImage = isImageUrl(urlStr);
-          const looksLikeVideo = /\.(mp4|webm|mov|m4v|m3u8)(?:$|\?)/i.test(urlStr) || /video/.test(ct) || /video/.test(typeField);
-
-          const isImage = looksLikeImage || typeField === 'image';
-          const isVideo = !isImage && looksLikeVideo;
-
-          const thumbLooksImage = isImageUrl(thumbUrl || '');
-          let finalIsImage = isImage;
-          let finalIsVideo = isVideo;
-          if (!finalIsImage && !finalIsVideo) {
-            if (thumbLooksImage) finalIsImage = true;
-            else if (looksLikeVideo) finalIsVideo = true;
-            else finalIsImage = true;
-          }
-          // ===== end detection =====
-
-          const guessedType = finalIsImage ? 'image' : 'video';
-          const guessedRes = item.resolution || ((finalIsImage && /hd/i.test(item.url)) ? 'hd' : '');
-          const suggestedName = buildFilename(guessedType, guessedRes, item.url, item.contentType || '');
-
-          // tombol tetap 'Download' sesuai permintaan
-          const btnLabel = 'Download';
-          const btn = makeDownloadButton(item.url, btnLabel, suggestedName);
+          const suggestedName = buildFilename('media', '', item.url, item.contentType || '');
+          const btn = makeDownloadButton(item.url, 'Download', suggestedName);
           container.appendChild(btn);
-
-          batchForDownload.push({
-            url: item.url,
-            contentType: item.contentType || '',
-            type: guessedType,
-            resolution: guessedRes
-          });
-
           resEl.appendChild(container);
         });
 
-        // show Download More as soon as results are displayed (so user can quickly "download more")
-        const igMore = document.getElementById('ig-more');
-        if (igMore && limited.length > 0) igMore.style.display = 'block';
-
-        if (batchForDownload.length > 0) {
-          if (downloadAllBtn) {
-            downloadAllBtn.style.display = 'inline-block';
-            downloadAllBtn.onclick = () => batchDownload(batchForDownload);
-          }
-        } else {
-          if (downloadAllBtn) downloadAllBtn.style.display = 'none';
-        }
-
+        if (limited.length > 0) document.getElementById('ig-more').style.display = 'block';
         resEl.style.display = 'block';
-      } catch(e) {
+      } catch (e) {
         console.error(e);
-        alert(e.message || 'Server error');
-      } finally {
-        load.style.display = 'none';
-      }
+        showModal('Error', e.message || 'Server error');
+      } finally { load.style.display = 'none'; }
     }
 
-    // --- TikTok downloader ---
+    // TikTok
     async function dlTT() {
       const url = document.getElementById('tt-url').value.trim();
       const load = document.getElementById('tt-load');
       const result = document.getElementById('tt-res');
-      if (!url) return alert('Masukkan link TikTok!');
+      if (!url) return showModal('Notice', 'Please provide a TikTok link.');
       load.style.display = 'block';
       result.style.display = 'none';
       try {
         const api = `https://api.nvidiabotz.xyz/download/tiktok?url=${encodeURIComponent(url)}`;
         const res = await fetch(api);
         const json = await res.json();
-        if (!json.status) throw new Error(json.message || 'Gagal');
-
-        const { video_hd, video_sd, mp3, thumbnail, title } = json.result;
+        if (!json.status || !json.result) throw new Error(json?.message || 'Failed to fetch data');
+        const { video_hd, video_sd, mp3, thumbnail, title } = json.result || {};
         const resEl = document.getElementById('tt-res');
         resEl.style.display = 'block';
         const thumbEl = document.getElementById('tt-thumb');
         const titleEl = document.getElementById('tt-title');
-
         if (thumbEl) thumbEl.src = thumbnail || '';
         if (titleEl) titleEl.textContent = title || '';
 
-        // HD
         const elHD = document.getElementById('tt-hd');
-        if (video_hd) {
-          if (elHD) {
-            elHD.style.display = 'block';
-            elHD.onclick = async () => {
-              await handleDownload(video_hd, buildFilename('tt','hd',video_hd));
-              const ttMore = document.getElementById('tt-more');
-              if (ttMore) ttMore.style.display = 'block';
-            };
-          }
-        } else {
-          if (elHD) { elHD.style.display = 'none'; elHD.onclick = null; }
-        }
-
-        // SD
         const elSD = document.getElementById('tt-sd');
-        if (video_sd) {
-          if (elSD) {
-            elSD.style.display = 'block';
-            elSD.onclick = async () => {
-              await handleDownload(video_sd, buildFilename('tt','sd',video_sd));
-              const ttMore = document.getElementById('tt-more');
-              if (ttMore) ttMore.style.display = 'block';
-            };
-          }
-        } else {
-          if (elSD) { elSD.style.display = 'none'; elSD.onclick = null; }
-        }
-
-        // MP3
         const elMP3 = document.getElementById('tt-mp3');
-        if (mp3) {
-          if (elMP3) {
-            elMP3.style.display = 'block';
-            elMP3.onclick = async () => {
-              await handleDownload(mp3, buildFilename('mp3','',mp3));
-              const ttMore = document.getElementById('tt-more');
-              if (ttMore) ttMore.style.display = 'block';
-            };
-          }
-        } else {
-          if (elMP3) { elMP3.style.display = 'none'; elMP3.onclick = null; }
-        }
 
-        // If API returns images array for slideshow, render similarly to IG
-        if (Array.isArray(json.result.images) && json.result.images.length) {
+        if (video_hd) {
+          elHD.style.display = 'block';
+          elHD.onclick = async () => { await handleDownload(video_hd, buildFilename('tt','hd',video_hd)); document.getElementById('tt-more').style.display = 'block'; };
+        } else { elHD.style.display = 'none'; elHD.onclick = null; }
+
+        if (video_sd) {
+          elSD.style.display = 'block';
+          elSD.onclick = async () => { await handleDownload(video_sd, buildFilename('tt','sd',video_sd)); document.getElementById('tt-more').style.display = 'block'; };
+        } else { elSD.style.display = 'none'; elSD.onclick = null; }
+
+        if (mp3) {
+          elMP3.style.display = 'block';
+          elMP3.onclick = async () => { await handleDownload(mp3, buildFilename('mp3','',mp3)); document.getElementById('tt-more').style.display = 'block'; };
+        } else { elMP3.style.display = 'none'; elMP3.onclick = null; }
+
+        if (Array.isArray(json.result?.images) && json.result.images.length) {
           result.innerHTML = '';
           const max = 100;
-          // caption for slideshow (use title/caption from API if present)
           const slideCaption = (json.result.title || json.result.caption || '').toString();
-          json.result.images.slice(0, max).forEach((imgUrl, idx) => {
+          json.result.images.slice(0, max).forEach((imgUrl) => {
             const div = document.createElement('div');
             div.style.marginBottom = '12px';
-
             const im = document.createElement('img');
             im.src = imgUrl;
             im.style.width = '100%';
             im.style.borderRadius = '10px';
             div.appendChild(im);
-
-            // caption from TikTok (if any)
             if (slideCaption) {
               const capEl = document.createElement('div');
               capEl.style.color = '#ddd';
@@ -579,61 +697,67 @@
               capEl.textContent = slideCaption;
               div.appendChild(capEl);
             }
-
             const suggested = buildFilename('tt', '', imgUrl);
-            const btn = makeDownloadButton(imgUrl, `Download`, suggested);
+            const btn = makeDownloadButton(imgUrl, 'Download', suggested);
             div.appendChild(btn);
             result.appendChild(div);
           });
         }
 
-        // show Download More as soon as result shown (if there's something)
-        const ttMore = document.getElementById('tt-more');
-        if (ttMore) ttMore.style.display = 'block';
-
+        document.getElementById('tt-more').style.display = 'block';
         result.style.display = 'block';
-      } catch(e) {
+      } catch (e) {
         console.error(e);
-        alert(e.message || 'Server error');
-      } finally {
-        load.style.display = 'none';
-      }
+        showModal('Error', e.message || 'Server error');
+      } finally { load.style.display = 'none'; }
     }
 
-    // --- Spotify downloader ---
+    // Spotify
     async function dlSP() {
       const url = document.getElementById('sp-url').value.trim();
       const load = document.getElementById('sp-load');
       const resEl = document.getElementById('sp-res');
-
-      if (!url) return alert('Masukkan link Spotify!');
+      if (!url) return showModal('Notice', 'Please provide a Spotify link.');
       resEl.innerHTML = '';
       load.style.display = 'block';
       try {
-        const apiEndpoint = `https://api.vreden.my.id/api/v1/download/spotify?url=${encodeURIComponent(url)}`;
+        const apiEndpoint = `https://api.elrayyxml.web.id/api/downloader/spotify?url=${encodeURIComponent(url)}`;
         const fetchUrl = proxyBase ? `${proxyBase}?url=${encodeURIComponent(apiEndpoint)}` : apiEndpoint;
-
         const r = await fetch(fetchUrl);
         const json = await r.json();
-        if (!json || !json.status || !json.result) throw new Error('Tidak ada data Spotify');
+        if (!json || !json.status || !json.result) throw new Error('No Spotify data');
+        const res = json.result || {};
+        const title = res.title || '';
+        const artists = res.artist || res.artists || '';
+        let downloadLink = res.url || res.download || '';
+        let coverUrl = res.cover_url || res.cover || res.thumbnail || res.image || '';
 
-        const res = json.result; // { id, title, artists, album, cover_url, duration_ms, download, ... }
+        if ((!coverUrl || !coverUrl.toString().trim()) || !downloadLink) {
+          try {
+            const apiRiki = `https://api.rikishop.my.id/download/spotify?url=${encodeURIComponent(url)}`;
+            const fetchRiki = proxyBase ? `${proxyBase}?url=${encodeURIComponent(apiRiki)}` : apiRiki;
+            const r2 = await fetch(fetchRiki);
+            const json2 = await r2.json();
+            const rd = json2?.result?.res_data || null;
+            if (rd) {
+              if (!coverUrl && rd.thumbnail) coverUrl = rd.thumbnail;
+              if (!downloadLink && Array.isArray(rd.formats) && rd.formats.length) downloadLink = rd.formats[0].url || downloadLink;
+            }
+          } catch (e) { console.warn('Fallback fetch failed', e); }
+        }
 
-        // build UI: cover, centered bold title — artist, download button
         const container = document.createElement('div');
         container.style.textAlign = 'left';
         container.style.marginBottom = '12px';
-
-        if (res.cover_url) {
+        if (coverUrl) {
           const img = document.createElement('img');
-          img.src = res.cover_url;
+          img.src = coverUrl;
           img.style.width = '100%';
           img.style.borderRadius = '10px';
           img.style.marginBottom = '8px';
           container.appendChild(img);
         }
 
-        // meta: center + bold + style like TikTok
         const meta = document.createElement('div');
         meta.style.color = '#fff';
         meta.style.fontWeight = 'bold';
@@ -641,43 +765,41 @@
         meta.style.fontSize = '1.05rem';
         meta.style.marginTop = '10px';
         meta.style.marginBottom = '12px';
-        meta.textContent = (res.title ? res.title : '') + (res.artists ? (res.title ? ' — ' : '') + res.artists : '');
+
+        let displayTitle = (title || '').toString();
+        const artistStr = (artists || '').toString().trim();
+        if (artistStr) {
+          const lowTitle = displayTitle.toLowerCase();
+          const lowArtist = artistStr.toLowerCase();
+          if (!lowTitle.includes(lowArtist)) displayTitle = displayTitle ? `${displayTitle} — ${artistStr}` : artistStr;
+        }
+
+        meta.textContent = displayTitle;
         if (meta.textContent) container.appendChild(meta);
 
-        // download button (mp3 link)
-        if (res.download) {
-          // build Spotify-specific suggested filename: TikDownload.live_Judul - NamaArtis.ext
-          const suggested = buildSpotifyFilename(res.title, res.artists, res.download);
-          const btn = makeDownloadButton(res.download, 'Download', suggested);
+        if (downloadLink) {
+          const suggested = buildSpotifyFilename(title, artists, downloadLink);
+          const btn = makeDownloadButton(downloadLink, 'Download', suggested);
           container.appendChild(btn);
         } else {
           const info = document.createElement('div');
           info.style.color = '#ddd';
           info.style.fontSize = '0.95rem';
           info.style.textAlign = 'center';
-          info.textContent = 'Link download tidak tersedia';
+          info.textContent = 'Download link is not available';
           container.appendChild(info);
         }
 
         resEl.appendChild(container);
-
-        // show Download More immediately
-        const spMore = document.getElementById('sp-more');
-        if (spMore) spMore.style.display = 'block';
-
+        if (document.getElementById('sp-more')) document.getElementById('sp-more').style.display = 'block';
         resEl.style.display = 'block';
       } catch (e) {
         console.error(e);
-        alert(e.message || 'Server error');
-      } finally {
-        load.style.display = 'none';
-      }
+        showModal('Error', e.message || 'Server error');
+      } finally { load.style.display = 'none'; }
     }
 
-    // ---------------------------
-    // NEW: clipboard / paste / clear logic for each input
-    // ---------------------------
-
+    // Clipboard handlers
     function attachClipboardHandlers(prefix) {
       const input = document.getElementById(`${prefix}-url`);
       const pasteBtn = document.getElementById(`${prefix}-paste`);
@@ -685,62 +807,62 @@
       if (!input || !pasteBtn || !clearBtn) return;
 
       function updateButtonStates() {
-        if (input.value.trim()) {
-          pasteBtn.classList.add('hidden');
-          clearBtn.classList.remove('hidden');
-        } else {
-          pasteBtn.classList.remove('hidden');
-          clearBtn.classList.add('hidden');
-        }
+        if (input.value.trim()) { pasteBtn.classList.add('hidden'); clearBtn.classList.remove('hidden'); }
+        else { pasteBtn.classList.remove('hidden'); clearBtn.classList.add('hidden'); }
       }
 
       pasteBtn.addEventListener('click', () => {
-        if (!navigator.clipboard || !navigator.clipboard.readText) {
-          console.error('Clipboard API not available');
-          return;
-        }
-        navigator.clipboard.readText().then(text => {
-          if (text && text.trim()) {
-            input.value = text.trim();
-            updateButtonStates();
-          }
-        }).catch(err => {
-          console.error('Unable to read clipboard content.', err);
-        });
+        if (!navigator.clipboard || !navigator.clipboard.readText) { console.error('Clipboard API not available'); showModal('Notice', 'Clipboard API not available'); return; }
+        navigator.clipboard.readText().then(text => { if (text && text.trim()) { input.value = text.trim(); updateButtonStates(); } }).catch(err => { console.error('Unable to read clipboard content.', err); showModal('Error', 'Unable to read clipboard content.'); });
       });
 
-      clearBtn.addEventListener('click', () => {
-        input.value = '';
-        updateButtonStates();
-      });
-
-      input.addEventListener('input', () => {
-        updateButtonStates();
-      });
-
-      // initial state
+      clearBtn.addEventListener('click', () => { input.value = ''; updateButtonStates(); });
+      input.addEventListener('input', updateButtonStates);
       updateButtonStates();
     }
 
-    // init clipboard handlers after DOM loaded
-    document.addEventListener('DOMContentLoaded', function () {
-      ['ig','tt','sp'].forEach(attachClipboardHandlers);
-    });
+    document.addEventListener('DOMContentLoaded', function () { ['ig','tt','sp'].forEach(attachClipboardHandlers); });
 
-    // helper to update state externally (used by resetCard)
     function updatePasteClearState(prefix) {
       const input = document.getElementById(`${prefix}-url`);
       const pasteBtn = document.getElementById(`${prefix}-paste`);
       const clearBtn = document.getElementById(`${prefix}-clear`);
       if (!input || !pasteBtn || !clearBtn) return;
-      if (input.value.trim()) {
-        pasteBtn.classList.add('hidden');
-        clearBtn.classList.remove('hidden');
-      } else {
-        pasteBtn.classList.remove('hidden');
-        clearBtn.classList.add('hidden');
-      }
+      if (input.value.trim()) { pasteBtn.classList.add('hidden'); clearBtn.classList.remove('hidden'); }
+      else { pasteBtn.classList.remove('hidden'); clearBtn.classList.add('hidden'); }
     }
+
+    // Modal
+    (function(){
+      const overlay = document.getElementById('pdModalOverlay');
+      const titleEl = document.getElementById('pdModalTitle');
+      const descEl  = document.getElementById('pdModalDesc');
+      const okBtn   = document.getElementById('pdModalOk');
+
+      function showModal(title, message) {
+        titleEl.textContent = title || 'Notice';
+        descEl.textContent = typeof message === 'string' ? message : JSON.stringify(message);
+        overlay.style.display = 'flex';
+        overlay.setAttribute('aria-hidden','false');
+        setTimeout(()=> okBtn.focus(), 60);
+      }
+
+      function closeModal() {
+        overlay.style.display = 'none';
+        overlay.setAttribute('aria-hidden','true');
+        document.activeElement?.blur?.();
+      }
+
+      okBtn.addEventListener('click', closeModal);
+      overlay.addEventListener('click', function(e){ if (e.target === overlay) closeModal(); });
+      document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && overlay.style.display === 'flex') closeModal(); });
+
+      window.showModal = showModal;
+      window.closeModal = closeModal;
+      window.showMethodPopup = showModal;
+      window.closeMethodPopup = closeModal;
+      window.alert = function(message) { showModal('Notice', String(message)); };
+    })();
   </script>
 </body>
 </html>
