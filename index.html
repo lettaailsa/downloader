@@ -647,7 +647,7 @@
         const api = `https://api.nvidiabotz.xyz/download/tiktok?url=${encodeURIComponent(url)}`;
         const res = await fetch(api);
         const json = await res.json();
-        if (!json.status || !json.result) throw new Error(json?.message || 'Failed to fetch data');
+        if (!json.status || !json.result) throw new Error(json?.message || 'No media found');
         const { video_hd, video_sd, mp3, thumbnail, title } = json.result || {};
         const resEl = document.getElementById('tt-res');
         resEl.style.display = 'block';
@@ -725,7 +725,7 @@
         const fetchUrl = proxyBase ? `${proxyBase}?url=${encodeURIComponent(apiEndpoint)}` : apiEndpoint;
         const r = await fetch(fetchUrl);
         const json = await r.json();
-        if (!json || !json.status || !json.result) throw new Error('No Spotify data');
+        if (!json || !json.status || !json.result) throw new Error('No Spotify song');
         const res = json.result || {};
         const title = res.title || '';
         const artists = res.artist || res.artists || '';
@@ -866,3 +866,4 @@
   </script>
 </body>
 </html>
+
